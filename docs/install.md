@@ -1,8 +1,35 @@
 # Install
 
-terakota ships as signed release archives on GitHub Releases. There is no installer
-and no package to sign up for — you download an archive, verify it, and put two
-binaries on your PATH.
+There is no account to sign up for and nothing phones home. Pick a channel:
+
+**Homebrew (macOS, Linux)**
+
+    brew install terakota-io/tap/terakota
+
+**Install script (macOS, Linux)**
+
+    curl -fsSL https://terakota.io/install.sh | sh
+
+Installs to `~/.local/bin`. The script downloads the official release archive,
+checks it against the release's published `SHA256SUMS`, and refuses to install on
+a mismatch. It is served as plain text — read it before you pipe it to a shell.
+
+Two settings, and they go on the **`sh`** side of the pipe — putting them before
+`curl` sets them for `curl` instead, which does nothing:
+
+    # pin a release instead of taking the latest
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.0.0 sh
+
+    # install system-wide (needs write access to /usr/local)
+    curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
+
+**Windows, or any manual install:** follow [Download](#1-download) below.
+
+Both channels install the same two binaries from the same signed archives, plus
+`EULA.md` and `THIRD_PARTY_NOTICES`. Neither is a substitute for verifying the
+release yourself — see **[verify.md](verify.md)**.
+
+## Manual install
 
 Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 `arm64`. Each archive contains:
@@ -40,9 +67,10 @@ them — see **[verify.md](verify.md)** for the exact commands.
 
 ## 3. Extract and put on PATH
 
-Linux / macOS:
+Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
+Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.0.0_linux_amd64.tar.gz
+    tar -xzf terakota_v1.0.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
