@@ -60,6 +60,21 @@ binaries are cosign-signed but not yet OS code-signed at v1 (see
 [docs/install.md](docs/install.md) for the expected Gatekeeper/SmartScreen
 notices). Source code is not published here.
 
+## Privacy
+
+terakota sends **nothing** to its publisher. There is no telemetry, no analytics, no
+crash reporting, and no network call to any service we operate — so we cannot see your
+credentials, your queries, your results, or your receipts. There is no account to create.
+
+Its only network connections are to the systems you point it at: your AppFolio instance
+and, if you connect it, Intuit's QuickBooks Online API. Your credentials rest in your
+operating system's keychain (macOS Keychain, Windows Credential Manager, or a Linux
+Secret Service) and never travel through command arguments or environment values.
+Receipts are written to a hash chain on your own machine.
+
+Full notice: **[docs/legal/PRIVACY.md](docs/legal/PRIVACY.md)** ·
+**https://terakota.io/privacy**
+
 ## Legal and support
 
 - **License for the binaries:** [docs/legal/EULA.md](docs/legal/EULA.md) — free to
