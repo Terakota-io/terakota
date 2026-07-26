@@ -23,11 +23,31 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
+**Linux packages (`.deb` / `.rpm`, since v1.1.0)**
+
+    sudo dpkg -i terakota_v1.1.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.1.0_linux_amd64.rpm
+
+Download the package for your CPU from the [Releases page](../../releases).
+Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
+`/usr/share/doc/terakota/`. The packages declare **no dependencies** — the
+binaries are static.
+
+Two things worth knowing:
+
+- If you previously installed to `/usr/local/bin` by hand, that copy **shadows**
+  the packaged one on most distributions (`/usr/local/bin` comes first on
+  `PATH`). Remove it, or run `hash -r` and check `command -v terakota`.
+- The RPM is **not GPG-signed**, so `dnf`/`yum` will warn or refuse under a
+  strict `gpgcheck` policy. Verify the download per
+  [verify.md](verify.md) and install the file directly with `rpm -i`, or pass
+  `--nogpgcheck` if you have judged that acceptable.
+
 **Windows, or any manual install:** follow [Download](#1-download) below.
 
-Both channels install the same two binaries from the same signed archives, plus
-`EULA.md` and `THIRD_PARTY_NOTICES`. Neither is a substitute for verifying the
-release yourself — see **[verify.md](verify.md)**.
+Every channel installs the same two binaries from the same signed archives, plus
+`EULA.md` and `THIRD_PARTY_NOTICES`. None of them is a substitute for verifying
+the release yourself — see **[verify.md](verify.md)**.
 
 ## Manual install
 
