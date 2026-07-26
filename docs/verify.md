@@ -47,13 +47,35 @@ transparency log to cross-check against in v1. If the signing key is ever rotate
 [SECURITY.md](../SECURITY.md), including an out-of-band path if the key itself is
 ever compromised. A move to keyless signing is a future item.
 
+### Verifying a `.deb` or `.rpm`
+
+The packages are checksummed and cosign-signed exactly like the archives — the
+same two steps apply, with the package filename in place of the archive:
+
+    sha256sum --check --ignore-missing SHA256SUMS
+    cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
+      --signature terakota_v1.1.0_linux_amd64.deb.sig \
+      terakota_v1.1.0_linux_amd64.deb
+
+The packages are **not** GPG-signed for `apt`/`dnf`; the cosign signature above
+is the signature. Note also that a package is a repackaging of the matching
+archive, never a separate build: the binaries inside it are byte-identical to the
+ones in `terakota_<tag>_linux_<arch>.tar.gz`, and the release pipeline asserts
+that by digest before publishing. You can check it yourself:
+
+    dpkg-deb --fsys-tarfile terakota_v1.1.0_linux_amd64.deb | tar -xO ./usr/bin/terakota | sha256sum
+    tar -xzOf terakota_v1.1.0_linux_amd64.tar.gz terakota | sha256sum
+
 ## 3. SBOM and provenance (what the extra files are)
 
 Each release also carries, per target:
 
 - **SBOM** — `*.spdx.json`, a Software Bill of Materials in SPDX format listing
   the components built into each binary. Useful for your own vulnerability and
-  license scanning.
+  license scanning. There is one SBOM **per archive**, and it covers the packages
+  too: a package's binaries are the same bytes as the matching archive's, so
+  `terakota_<tag>_linux_<arch>.tar.gz.spdx.json` is the bill of materials for
+  `terakota_<tag>_linux_<arch>.deb` and `.rpm` as well.
 - **SLSA provenance** — a signed attestation binding each artifact to the source
   commit and build that produced it.
 
