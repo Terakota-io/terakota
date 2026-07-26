@@ -49,6 +49,43 @@ Every channel installs the same two binaries from the same signed archives, plus
 `EULA.md` and `THIRD_PARTY_NOTICES`. None of them is a substitute for verifying
 the release yourself — see **[verify.md](verify.md)**.
 
+## Where your credentials live
+
+Since v1.2.0 the default store is your **OS keychain** — macOS Keychain, Windows
+Credential Manager, or a Linux Secret Service. The operating system owns unlocking, so
+tool calls and the MCP server start without a passphrase prompt.
+
+If no keychain is reachable, terakota **fails closed** rather than quietly storing your
+credentials somewhere less protected. The encrypted-file keystore is still available, as
+an explicit choice:
+
+    terakota keystore status                     # which backend, and why the warning
+    terakota keystore use-file-fallback --yes    # opt in (warns on every command)
+    terakota keystore migrate --to keychain      # move existing entries
+
+Nothing moves between backends on its own. `migrate` is the only command that copies, and
+it never deletes the source — remove the old copy yourself once you have confirmed the new
+backend works.
+
+**Upgrading from v1.0.0 or v1.1.0:** your credentials are in the encrypted file and stay
+there. Run `terakota keystore migrate --to keychain` to move them, or
+`terakota keystore use-file-fallback --yes` to keep using the file. Until you do one of
+those, commands fail closed on a machine without a keychain.
+
+## Use terakota as an MCP extension
+
+Since v1.2.0 each release carries `.mcpb` bundles — one per platform and CPU, because the
+bundle format has no architecture dimension. Download the one matching your machine
+(`terakota_<tag>_darwin_arm64.mcpb` on Apple Silicon) and open it with your MCP host.
+
+**Configure terakota first.** The extension binds to one company and expects its
+credentials to already exist:
+
+    terakota company add --company mybooks --base-url https://<yourdomain>.appfolio.com/api/v2
+    terakota credentials set --company mybooks
+
+Installing the extension without those two commands will fail on the first tool call.
+
 ## Manual install
 
 Every release carries archives for Linux, macOS, and Windows on both `amd64` and
