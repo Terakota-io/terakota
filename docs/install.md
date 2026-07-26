@@ -10,11 +10,18 @@ There is no account to sign up for and nothing phones home. Pick a channel:
 
     curl -fsSL https://terakota.io/install.sh | sh
 
-Installs to `~/.local/bin`. Set `PREFIX=/usr/local` to install system-wide, or
-`TERAKOTA_VERSION=v1.0.0` to pin a release instead of taking the latest. The
-script downloads the official release archive, checks it against the release's
-published `SHA256SUMS`, and refuses to install on a mismatch. It is served as
-plain text — read it before you pipe it to a shell.
+Installs to `~/.local/bin`. The script downloads the official release archive,
+checks it against the release's published `SHA256SUMS`, and refuses to install on
+a mismatch. It is served as plain text — read it before you pipe it to a shell.
+
+Two settings, and they go on the **`sh`** side of the pipe — putting them before
+`curl` sets them for `curl` instead, which does nothing:
+
+    # pin a release instead of taking the latest
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.0.0 sh
+
+    # install system-wide (needs write access to /usr/local)
+    curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Windows, or any manual install:** follow [Download](#1-download) below.
 
@@ -60,9 +67,10 @@ them — see **[verify.md](verify.md)** for the exact commands.
 
 ## 3. Extract and put on PATH
 
-Linux / macOS:
+Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
+Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.0.0_linux_amd64.tar.gz
+    tar -xzf terakota_v1.0.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
