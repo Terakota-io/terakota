@@ -38,7 +38,16 @@ Inc.; their services are governed by your agreements with them.
 
 ## Get started
 
-- **Install:** [docs/install.md](docs/install.md)
+On macOS or Linux:
+
+    brew install terakota-io/tap/terakota
+    # or
+    curl -fsSL https://terakota.io/install.sh | sh
+
+On Windows, download the signed `.zip` from
+[Releases](../../releases). Then:
+
+- **Install — all channels and the manual path:** [docs/install.md](docs/install.md)
 - **Verify your download:** [docs/verify.md](docs/verify.md)
 - **FAQ — what receipts do and do not prove:** [docs/faq.md](docs/faq.md)
 

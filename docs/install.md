@@ -1,8 +1,28 @@
 # Install
 
-terakota ships as signed release archives on GitHub Releases. There is no installer
-and no package to sign up for — you download an archive, verify it, and put two
-binaries on your PATH.
+There is no account to sign up for and nothing phones home. Pick a channel:
+
+**Homebrew (macOS, Linux)**
+
+    brew install terakota-io/tap/terakota
+
+**Install script (macOS, Linux)**
+
+    curl -fsSL https://terakota.io/install.sh | sh
+
+Installs to `~/.local/bin`. Set `PREFIX=/usr/local` to install system-wide, or
+`TERAKOTA_VERSION=v1.0.0` to pin a release instead of taking the latest. The
+script downloads the official release archive, checks it against the release's
+published `SHA256SUMS`, and refuses to install on a mismatch. It is served as
+plain text — read it before you pipe it to a shell.
+
+**Windows, or any manual install:** follow [Download](#1-download) below.
+
+Both channels install the same two binaries from the same signed archives, plus
+`EULA.md` and `THIRD_PARTY_NOTICES`. Neither is a substitute for verifying the
+release yourself — see **[verify.md](verify.md)**.
+
+## Manual install
 
 Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 `arm64`. Each archive contains:
