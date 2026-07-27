@@ -48,6 +48,8 @@ On Windows, download the signed `.zip` from
 [Releases](../../releases). Then:
 
 - **Install — all channels and the manual path:** [docs/install.md](docs/install.md)
+- **Use it inside Claude Desktop (`.mcpb` extension), start to finish:**
+  [docs/install.md](docs/install.md#use-terakota-as-an-mcp-extension)
 - **Verify your download:** [docs/verify.md](docs/verify.md)
 - **FAQ — what receipts do and do not prove:** [docs/faq.md](docs/faq.md)
 
