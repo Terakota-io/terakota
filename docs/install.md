@@ -76,15 +76,44 @@ those, commands fail closed on a machine without a keychain.
 
 Since v1.2.0 each release carries `.mcpb` bundles — one per platform and CPU, because the
 bundle format has no architecture dimension. Download the one matching your machine
-(`terakota_<tag>_darwin_arm64.mcpb` on Apple Silicon) and open it with your MCP host.
+(`terakota_<tag>_darwin_arm64.mcpb` on Apple Silicon).
 
-**Configure terakota first.** The extension binds to one company and expects its
-credentials to already exist:
+**1. Do all of this on the machine that runs the host.** Credentials live in that
+machine's OS keychain, so a setup you did in WSL2 or on a Mac does not carry over to
+Claude Desktop on Windows. Install the CLI there and run the two commands below there.
 
-    terakota company add --company mybooks --base-url https://<yourdomain>.appfolio.com/api/v2
+**2. Create the company and store its credentials — before you install the bundle.**
+
+    terakota company add --company mybooks --base-url https://api.appfolio.com/api/v0
     terakota credentials set --company mybooks
+    # extension's "Company id" field:  mybooks   <- the SAME string
 
-Installing the extension without those two commands will fail on the first tool call.
+`<yourdomain>.appfolio.com` is your web portal / Reports API address. The Database API
+terakota speaks lives at `api.appfolio.com/api/v0` for every customer.
+
+The extension's **Company id** field is a pointer to the company you just created — it
+creates nothing and stores nothing. It has to be that same string, exactly.
+
+**3. Install the bundle from Claude Desktop's settings.** There is no `.mcpb` file
+association, so double-clicking one gets you the "select an app to open this file" picker
+listing Notepad and whatever else — expected, not a defect. Open Claude Desktop →
+**Settings** → **Extensions**, and install (or drag in) the `.mcpb` there.
+
+Four things to expect after that:
+
+- **A red "access to everything / not verified by Anthropic" banner.** Claude Desktop
+  shows it for any sideloaded extension; it is not about terakota specifically. Expected
+  at v1, same as the Gatekeeper/SmartScreen notices below.
+- **The extension exists only in chats that run on this computer.** A chat running in the
+  cloud shows no error at all — Claude simply says it cannot find terakota. If Claude
+  says terakota does not exist, the chat is running in the cloud: start a new one set to
+  run on this computer.
+- **The CLI and the extension cannot share a company.** While the extension (or any MCP
+  host) is connected, CLI commands on that same company fail with `chain is already open
+  by another process`. One writer per chain, by design — close the chat or turn the
+  extension off first.
+- **Tools arrive set to "Needs approval".** The first call to one prompts you before it
+  runs.
 
 ## Manual install
 
@@ -155,9 +184,12 @@ Only do this after you have verified the download.
 
 ## First run
 
-    terakota company add --company mybooks --base-url https://<yourdomain>.appfolio.com/api/v2
-    terakota credentials set --company mybooks     # no-echo prompts; sealed in an encrypted local keystore
+    terakota company add --company mybooks --base-url https://api.appfolio.com/api/v0
+    terakota credentials set --company mybooks     # no-echo prompts; sealed in your OS keychain
     terakota qbo connect --company mybooks         # optional: QuickBooks OAuth against an Intuit sandbox company
+
+`<yourdomain>.appfolio.com` is your web portal / Reports API address. The Database API
+terakota speaks lives at `api.appfolio.com/api/v0` for every customer.
 
 The first run prints a one-time disclosure notice. You can re-show it any time
 with `terakota about`, and print the third-party license notices with
@@ -165,7 +197,9 @@ with `terakota about`, and print the third-party license notices with
 
 Then any read tool works, e.g.:
 
-    terakota appfolio_bills_list --company mybooks --updated-from 2026-07-01
+    terakota appfolio_bills_list --company mybooks --updated-from 2026-07-01T00:00:00Z
+
+Time bounds are RFC3339.
 
 ## MCP mode
 
