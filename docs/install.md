@@ -184,6 +184,10 @@ Only do this after you have verified the download.
 
 ## First run
 
+If you already set up a company for the
+[MCP extension](#use-terakota-as-an-mcp-extension), it is the same company — skip
+to the read below.
+
     terakota company add --company mybooks --base-url https://api.appfolio.com/api/v0
     terakota credentials set --company mybooks     # no-echo prompts; sealed in your OS keychain
     terakota qbo connect --company mybooks         # optional: QuickBooks OAuth against an Intuit sandbox company
