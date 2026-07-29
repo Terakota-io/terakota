@@ -25,6 +25,21 @@ offline.
   chain lives under your control — they are **not** tamper-evident against whoever
   controls the machine. Treat them as integrity evidence for a chain you
   custodied, not as third-party attestation.
+- **Counts and rollups without the records** *(since v1.3.0)*. Every list tool takes
+  `--aggregate count`, `--group-by <fields>`, and `--sum <field>`: terakota walks the
+  pages and releases derived rows — counts, cross-tabs, sums — instead of record
+  bodies. A portfolio count moves kilobytes, not megabytes, and no personal data
+  needs to leave the source system to answer "how many". Results carry their own
+  denominators (`matched`, per-field population) so a sparse field can't masquerade
+  as complete.
+- **One-command GL month-close** *(since v1.3.0)*. `appfolio_gl_details_list
+  --aggregate count` with a posting-date window sweeps the source's change-window
+  constraint internally and returns per-account debit/credit rollups with an explicit
+  list of swept, unswept, and failed windows — a total that is missing data says so,
+  every time.
+- **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
+  bounds, and the source-system quirks it absorbs; every error carries a
+  `next_action` telling you whether and how to retry.
 - **Zero phone-home.** No telemetry, no analytics, no crash reporting, no network
   calls to any service we operate. We cannot see your credentials, queries,
   results, or receipts.
