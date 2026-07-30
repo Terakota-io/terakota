@@ -26,8 +26,8 @@ terakota releases are signed with a **key** (not keyless), and the public key
 ships with the release as `cosign.pub`:
 
     cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
-      --signature terakota_v1.0.0_linux_amd64.tar.gz.sig \
-      terakota_v1.0.0_linux_amd64.tar.gz
+      --signature terakota_v1.3.1_linux_amd64.tar.gz.sig \
+      terakota_v1.3.1_linux_amd64.tar.gz
 
 `--insecure-ignore-tlog=true` is correct here: this release does **not** use a
 transparency log. The flag name is cosign's, not a warning about your download.
@@ -54,8 +54,8 @@ same two steps apply, with the package filename in place of the archive:
 
     sha256sum --check --ignore-missing SHA256SUMS
     cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
-      --signature terakota_v1.1.0_linux_amd64.deb.sig \
-      terakota_v1.1.0_linux_amd64.deb
+      --signature terakota_v1.3.1_linux_amd64.deb.sig \
+      terakota_v1.3.1_linux_amd64.deb
 
 The packages are **not** GPG-signed for `apt`/`dnf`; the cosign signature above
 is the signature. Note also that a package is a repackaging of the matching
@@ -63,8 +63,8 @@ archive, never a separate build: the binaries inside it are byte-identical to th
 ones in `terakota_<tag>_linux_<arch>.tar.gz`, and the release pipeline asserts
 that by digest before publishing. You can check it yourself:
 
-    dpkg-deb --fsys-tarfile terakota_v1.1.0_linux_amd64.deb | tar -xO ./usr/bin/terakota | sha256sum
-    tar -xzOf terakota_v1.1.0_linux_amd64.tar.gz terakota | sha256sum
+    dpkg-deb --fsys-tarfile terakota_v1.3.1_linux_amd64.deb | tar -xO ./usr/bin/terakota | sha256sum
+    tar -xzOf terakota_v1.3.1_linux_amd64.tar.gz terakota | sha256sum
 
 ## 3. SBOM and provenance (what the extra files are)
 
