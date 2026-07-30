@@ -37,6 +37,16 @@ offline.
   constraint internally and returns per-account debit/credit rollups with an explicit
   list of swept, unswept, and failed windows — a total that is missing data says so,
   every time.
+- **Field discovery without pulling records** *(since v1.3.1)*. Every tool's `--help`
+  (and MCP description) lists the collection's record fields with types and
+  live-verified notes — so learning a field name for `--group-by` or `--sum` costs
+  zero vendor calls and zero personal data, instead of a full page of record bodies.
+- **Whole-walk totals in one invocation** *(since v1.3.1)*. Aggregate walks fold
+  page-by-page (the page cap is real now: full-table counts and histograms are
+  typically ONE call), partial slices label themselves as subtotals, and a
+  multi-slice walk's final slice reports exact merged `walk_totals`. Every
+  `gl_details` aggregate — not just the sweep — carries `total_debits`/`total_credits`,
+  scope-labeled whenever coverage is incomplete.
 - **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
   bounds, and the source-system quirks it absorbs; every error carries a
   `next_action` telling you whether and how to retry.
