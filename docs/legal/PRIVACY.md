@@ -1,11 +1,12 @@
 # terakota Privacy Notice
 
-Version 1.1 — Effective 2026-08-13 — Bilans Solutions LLC
+Version 1.2 — Effective 2026-08-13 — Bilans Solutions LLC
 
 The short version, split by what you connect:
 
-- **AppFolio, local reconciliation, receipts, and `verify-receipts`:** the
-  terakota software sends us nothing and requires no account.
+- **AppFolio, Dialpad, local reconciliation, receipts, and
+  `verify-receipts`:** the terakota software sends us nothing and requires
+  no account.
 - **Production QuickBooks connections (from terakota v1.4.0):** these run
   through a connect service we operate, and they require a free terakota
   account.
@@ -35,14 +36,15 @@ classes:
    during normal use, whenever the sealed access token nears expiry — roughly
    hourly in active use; both tokens are stored sealed in your local keystore.
 
-If you use AppFolio, local reconciliation, receipts, `verify-receipts`, or an
-Intuit sandbox company under your own registered Intuit application, the
-software makes no call to any host of ours at all, and needs no account.
+If you use AppFolio, Dialpad, local reconciliation, receipts,
+`verify-receipts`, or an Intuit sandbox company under your own registered
+Intuit application, the software makes no call to any host of ours at all,
+and needs no account.
 
-**What is never transmitted to us, in any mode:** your AppFolio credentials,
-your queries, your query results, and your receipt chains. They are stored and
-processed only on your machines, we hold no copy of them, and no interface of
-ours can reach them.
+**What is never transmitted to us, in any mode:** your AppFolio and Dialpad
+credentials, your queries, your query results, and your receipt chains. They
+are stored and processed only on your machines, we hold no copy of them, and
+no interface of ours can reach them.
 
 **What does transit us, and only for production QuickBooks connections made
 through our connect service:** the Intuit authorization code and the OAuth token
@@ -102,11 +104,11 @@ the portal privacy notice, not here.
 
 **Who this applies to.** Only people who connect production QuickBooks Online
 through our connect service, under our registered Intuit application (from
-terakota v1.4.0). AppFolio, local reconciliation, receipts, `verify-receipts`,
-and Intuit sandbox companies connected under your **own** registered Intuit
-application need no account, and none of this section applies to them. If you
-never connect production QuickBooks through our service, no account of yours
-exists.
+terakota v1.4.0). AppFolio, Dialpad, local reconciliation, receipts,
+`verify-receipts`, and Intuit sandbox companies connected under your **own**
+registered Intuit application need no account, and none of this section
+applies to them. If you never connect production QuickBooks through our
+service, no account of yours exists.
 
 **Why the account exists.** Three reasons, and no others: so we can notify you
 if the connect service suffers a security incident; so abuse of our shared
@@ -245,6 +247,13 @@ connection records, and flight rows; the append-only audit log is tombstoned
 rather than rewritten, as Section 3a describes.
 
 [Change log:
+v1.2 — Dialpad is named in the enumerations that were already true of it: the
+lede's account-free mode, the "makes no call to any host of ours" list, the
+never-transmitted list (§1), and the who-this-applies-to carve-out (§3a). What
+we hold does not change. Reads with a Dialpad API key you supply run from your
+machine to Dialpad directly, add no host of ours to any flow, and put nothing
+new in our systems — the enumerated closed set of network calls to us (§1),
+§3a, and the breach surface named in §5 are all untouched.
 v1.1 — production QuickBooks connections through our hosted connect service
 (from terakota v1.4.0). The lede is split by mode: the software still sends us
 nothing for AppFolio, local use and `verify-receipts`, but production QuickBooks

@@ -43,12 +43,11 @@ Dialpad).
 
 **Version scope.** Production QuickBooks connections are supported **from
 terakota v1.4.0 onward**. Releases before v1.4.0 connect to Intuit sandbox
-companies only, and nothing of ours is in any of their flows. This agreement is
-published before v1.4.0 ships, so read every statement about production
-QuickBooks as describing v1.4.0 and later. Version 1.0 of this agreement
-promised that if a release added a service of ours to the connection flow, this
-agreement and the Privacy Notice would be updated first — this version is that
-update.
+companies only, and nothing of ours is in any of their flows. Version 1.0 of
+this agreement promised that if a release added a service of ours to the
+connection flow, this agreement and the Privacy Notice would be updated
+first — version 1.1, published before v1.4.0 shipped, was that update. Read
+every statement about production QuickBooks as describing v1.4.0 and later.
 
 How much of us is in the path depends on what you connect:
 
@@ -77,13 +76,13 @@ How much of us is in the path depends on what you connect:
   authorization code and the token material **transit** that broker. They are
   never stored there.
 
-What is true in every one of those modes: no business data, no query, no query
-result, and no AppFolio or Dialpad credential ever reaches us. Your QuickBooks reads run
-from your machine to Intuit directly — the connect broker never carries them,
-and it never proxies a vendor data API. We are not affiliated with, endorsed by,
-or sponsored by AppFolio, Inc., Intuit Inc., or Dialpad, Inc.; their services
-are governed by
-your agreements with them.
+What is true in every one of those modes: no business data, no query, no
+query result, and no AppFolio or Dialpad credential ever reaches us. Your
+QuickBooks reads run from your machine to Intuit directly — the connect
+broker never carries them, and it never proxies a vendor data API. We are
+not affiliated with, endorsed by, or sponsored by AppFolio, Inc., Intuit
+Inc., or Dialpad, Inc.; their services are governed by your agreements with
+them.
 
 - **Read-only toward your business systems, by construction.** The Software
   contains no code paths that write to the connected business systems; this is
@@ -156,14 +155,15 @@ your agreements with them.
 ## 3. Your responsibilities
 
 You will: (a) use the Software only with credentials and accounts you are
-authorized to use, and in compliance with your agreements with AppFolio, Intuit,
-Dialpad, and any other vendor; (b) comply with applicable law, including privacy and
-financial-records law applicable to the data you access; (c) safeguard
-credentials, tokens, keystore passphrases, per-install device keys, and receipt
-chains stored on your machines — including backing up receipt chains if you rely
-on them; (d) validate outputs before relying on them for accounting, legal, or
-compliance purposes. The Software retrieves and records data; it does not
-provide accounting, legal, audit, or professional advice.
+authorized to use, and in compliance with your agreements with AppFolio,
+Intuit, Dialpad, and any other vendor; (b) comply with applicable law,
+including privacy and financial-records law applicable to the data you
+access; (c) safeguard credentials, tokens, keystore passphrases, per-install
+device keys, and receipt chains stored on your machines — including backing
+up receipt chains if you rely on them; (d) validate outputs before relying
+on them for accounting, legal, or compliance purposes. The Software
+retrieves and records data; it does not provide accounting, legal, audit, or
+professional advice.
 
 ## 4. Updates, advisories, and every connection the Software makes to us
 
