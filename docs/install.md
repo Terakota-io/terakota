@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.4.0 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.5.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.4.0_linux_amd64.deb
-    sudo rpm -i  terakota_v1.4.0_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.5.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.5.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -58,8 +58,8 @@ Upgrade through the channel you installed with:
 
     brew upgrade terakota                           # Homebrew
     curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
-    sudo dpkg -i terakota_v1.4.0_linux_amd64.deb    # .deb — installs over the old
-    sudo rpm -U  terakota_v1.4.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+    sudo dpkg -i terakota_v1.5.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.5.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
 
 For the MCP extension, download the new `.mcpb` for your platform and install it
 from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
@@ -73,9 +73,9 @@ binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
 step attached: see the keystore note under
 [Where your credentials live](#where-your-credentials-live).
 
-**Expect the first-run notice one more time after upgrading to v1.4.0.** It
-reprints when the terms version it pins changes, and v1.4.0 moves from terms 1.0
-to 1.1 — so that single reprint is the notice doing its job. It does not print
+**Expect the first-run notice one more time after upgrading to v1.5.0.** It
+reprints when the terms version it pins changes, and v1.5.0 moves from terms 1.1
+to 1.2 — so that single reprint is the notice doing its job. It does not print
 again on an upgrade that leaves the terms unchanged. `terakota about` shows it
 any time.
 
@@ -158,16 +158,16 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.4.0_linux_amd64.tar.gz`,
-  `terakota_v1.4.0_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.4.0_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.5.0_linux_amd64.tar.gz`,
+  `terakota_v1.5.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.5.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
 > The account-free path is your **own** registered Intuit application against an
 > Intuit **sandbox** company — Intuit accepts the loopback redirect it uses for
-> sandbox only. AppFolio reads are unaffected, and everything is read-only by
-> construction.
+> sandbox only. AppFolio and Dialpad reads are unaffected, and everything is
+> read-only by construction.
 
 ## 1. Download
 
@@ -188,7 +188,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.4.0_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.5.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
@@ -223,6 +223,7 @@ to the read below.
     terakota company add --company mybooks --base-url https://api.appfolio.com/api/v0
     terakota credentials set --company mybooks     # no-echo prompts; sealed in your OS keychain
     terakota qbo connect --company mybooks         # optional: connect QuickBooks Online
+    terakota dialpad connect --company mybooks     # optional: connect Dialpad (BYO API key)
 
 `<yourdomain>.appfolio.com` is your web portal / Reports API address. The Database API
 terakota speaks lives at `api.appfolio.com/api/v0` for every customer.
@@ -235,6 +236,17 @@ and every renewal run server-side under our registered Intuit application. An In
 instead, with the exchange and every renewal running locally against a loopback listener;
 that path needs no account. Reads run from your machine to Intuit directly either way.
 Disconnect with `terakota qbo disconnect --company mybooks`.
+
+`dialpad connect` (from v1.5.0) is simpler: no OAuth ceremony, no account with us. It
+prompts no-echo for a Dialpad API key you issue in your own Dialpad account and seals it
+into the keystore alongside the company's other credentials — that key is the whole
+binding, and there is no realm to bind. Reads run from your machine to Dialpad directly.
+Two things to know before you rely on it. The key carries whatever scope Dialpad granted
+it — typically more than read — so it is more capable than the tools that use it. And the
+family ships snippet-tier: verified against a maintainer-held Dialpad tenant, not yet
+validated on customer accounts. Issuing a read key is self-serve on Dialpad's Pro and
+Enterprise plans, but that was recorded on one tenant, so treat the plan tier as
+necessary and not sufficient.
 
 The first run prints a one-time disclosure notice. You can re-show it any time
 with `terakota about`, and print the third-party license notices with

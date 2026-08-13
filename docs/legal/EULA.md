@@ -1,6 +1,6 @@
 # terakota End User License Agreement and Terms of Use
 
-Version 1.1 — Effective 2026-08-13
+Version 1.2 — Effective 2026-08-13
 
 This agreement is between you (the individual or entity using the Software) and
 Bilans Solutions LLC, a Wyoming limited liability company ("we", "us"). It
@@ -38,22 +38,30 @@ licenses.
 ## 2. What the Software does — and does not do (read this)
 
 The Software runs on your machine, with credentials **you** supply, against
-accounts **you are authorized to access** (AppFolio and QuickBooks Online).
+accounts **you are authorized to access** (AppFolio, QuickBooks Online, and
+Dialpad).
 
 **Version scope.** Production QuickBooks connections are supported **from
 terakota v1.4.0 onward**. Releases before v1.4.0 connect to Intuit sandbox
-companies only, and nothing of ours is in any of their flows. This agreement is
-published before v1.4.0 ships, so read every statement about production
-QuickBooks as describing v1.4.0 and later. Version 1.0 of this agreement
-promised that if a release added a service of ours to the connection flow, this
-agreement and the Privacy Notice would be updated first — this version is that
-update.
+companies only, and nothing of ours is in any of their flows. Version 1.0 of
+this agreement promised that if a release added a service of ours to the
+connection flow, this agreement and the Privacy Notice would be updated
+first — version 1.1, published before v1.4.0 shipped, was that update. Read
+every statement about production QuickBooks as describing v1.4.0 and later.
 
 How much of us is in the path depends on what you connect:
 
 - **AppFolio, local reconciliation, receipts, and `verify-receipts`.** No
   account with us, no service of ours in the path, nothing transmitted to us.
   Reads run from your machine to the vendor directly, with your credentials.
+- **Dialpad, with an API key you supply (BYO).** No account with us, no
+  service of ours in the path, nothing transmitted to us. Reads run from your
+  machine to Dialpad directly with your own key, and each one is receipted
+  locally like every other read. This surface ships **snippet-tier**: it has
+  been verified against a maintainer-held Dialpad tenant only, never on a
+  customer account, so treat it as unproven on yours until you have run it.
+  Your Dialpad key carries whatever scope Dialpad granted it — typically more
+  than read.
 - **QuickBooks Online against an Intuit sandbox company, under your own
   registered Intuit application.** The same: no account, no service of ours in
   the path, nothing transmitted to us. Intuit returns the authorization to a
@@ -68,12 +76,13 @@ How much of us is in the path depends on what you connect:
   authorization code and the token material **transit** that broker. They are
   never stored there.
 
-What is true in every one of those modes: no business data, no query, no query
-result, and no AppFolio credential ever reaches us. Your QuickBooks reads run
-from your machine to Intuit directly — the connect broker never carries them,
-and it never proxies a vendor data API. We are not affiliated with, endorsed by,
-or sponsored by AppFolio, Inc. or Intuit Inc.; their services are governed by
-your agreements with them.
+What is true in every one of those modes: no business data, no query, no
+query result, and no AppFolio or Dialpad credential ever reaches us. Your
+QuickBooks reads run from your machine to Intuit directly — the connect
+broker never carries them, and it never proxies a vendor data API. We are
+not affiliated with, endorsed by, or sponsored by AppFolio, Inc., Intuit
+Inc., or Dialpad, Inc.; their services are governed by your agreements with
+them.
 
 - **Read-only toward your business systems, by construction.** The Software
   contains no code paths that write to the connected business systems; this is
@@ -146,14 +155,15 @@ your agreements with them.
 ## 3. Your responsibilities
 
 You will: (a) use the Software only with credentials and accounts you are
-authorized to use, and in compliance with your agreements with AppFolio, Intuit,
-and any other vendor; (b) comply with applicable law, including privacy and
-financial-records law applicable to the data you access; (c) safeguard
-credentials, tokens, keystore passphrases, per-install device keys, and receipt
-chains stored on your machines — including backing up receipt chains if you rely
-on them; (d) validate outputs before relying on them for accounting, legal, or
-compliance purposes. The Software retrieves and records data; it does not
-provide accounting, legal, audit, or professional advice.
+authorized to use, and in compliance with your agreements with AppFolio,
+Intuit, Dialpad, and any other vendor; (b) comply with applicable law,
+including privacy and financial-records law applicable to the data you
+access; (c) safeguard credentials, tokens, keystore passphrases, per-install
+device keys, and receipt chains stored on your machines — including backing
+up receipt chains if you rely on them; (d) validate outputs before relying
+on them for accounting, legal, or compliance purposes. The Software
+retrieves and records data; it does not provide accounting, legal, audit, or
+professional advice.
 
 ## 4. Updates, advisories, and every connection the Software makes to us
 
@@ -270,6 +280,15 @@ Government users: the Software is commercial computer software under FAR 12.212
 Contact: contact@bilans.io
 
 [Change log:
+v1.2 — Dialpad added to the read surface (§2): reads run from your machine to
+Dialpad directly with a Dialpad API key you supply, receipted locally, with no
+account with us and no service of ours in the path; the surface is disclosed as
+snippet-tier, verified against a maintainer-held tenant only and never on a
+customer account. Dialpad, Inc. is named in the non-affiliation sentence (§2)
+and in your vendor-agreement responsibility (§3(a)). **Section 4's enumerated
+closed set of connections the Software makes to us is UNCHANGED by this
+version: Dialpad adds no host of ours, and nothing in the Dialpad path
+contacts us.**
 v1.1 — production QuickBooks connections through our hosted connect service
 (from terakota v1.4.0): a free terakota account is required for connections
 under our registered Intuit application; the broker is named as a permanent

@@ -1,24 +1,24 @@
 # terakota
 
 **terakota** is a free, local-first command-line tool and MCP server that reads the
-AppFolio and QuickBooks Online accounts you already run — using your own
+AppFolio, QuickBooks Online, and Dialpad accounts you already run — using your own
 credentials, on your own machine — and records every read as a verifiable
 integrity receipt.
 
-It is read-only by construction. AppFolio reads, local work, and `verify-receipts`
-send nothing to us and need no account with us; connecting a **production**
-QuickBooks company (from v1.4.0) runs through a hosted connect service we operate
-and needs a free terakota account. It ships with `verify-receipts`, a standalone
-tool that checks receipt chains offline.
+It is read-only by construction. AppFolio reads, Dialpad reads, local work, and
+`verify-receipts` send nothing to us and need no account with us; connecting a
+**production** QuickBooks company (from v1.4.0) runs through a hosted connect
+service we operate and needs a free terakota account. It ships with
+`verify-receipts`, a standalone tool that checks receipt chains offline.
 
 ## What it does
 
-- **Reads your systems with your credentials.** terakota connects to AppFolio and
-  QuickBooks Online using credentials you supply, against accounts you are
-  authorized to access. Reads always run from your machine to the vendor directly.
-  The only other host it ever talks to is our connect service, and only if you
-  connect a production QuickBooks company (from v1.4.0) — for authorization, token
-  renewal, and revocation, never for your data.
+- **Reads your systems with your credentials.** terakota connects to AppFolio,
+  QuickBooks Online, and Dialpad using credentials you supply, against accounts you
+  are authorized to access. Reads always run from your machine to the vendor
+  directly. The only other host it ever talks to is our connect service, and only
+  if you connect a production QuickBooks company (from v1.4.0) — for authorization,
+  token renewal, and revocation, never for your data.
 - **Read-only by construction.** The binaries contain no code paths that write to
   the connected systems — a structural property of the shipped client, asserted by
   automated checks at build time.
@@ -52,6 +52,14 @@ tool that checks receipt chains offline.
   multi-slice walk's final slice reports exact merged `walk_totals`. Every
   `gl_details` aggregate — not just the sweep — carries `total_debits`/`total_credits`,
   scope-labeled whenever coverage is incomplete.
+- **Dialpad reads with a key you supply** *(since v1.5.0)*. `terakota dialpad
+  connect` seals a Dialpad API key of your own into your OS keychain, and
+  `dialpad_users_list`, `dialpad_offices_list`, and `dialpad_departments_list`
+  read against it — from your machine to Dialpad directly, no service of ours in
+  the path, no account with us, each read receipted on your local chain like every
+  other read. This family ships **snippet-tier**: it is verified against a
+  maintainer-held Dialpad tenant, not yet validated on customer accounts. Nothing
+  here claims these tools have run on yours.
 - **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
   bounds, and the source-system quirks it absorbs; every error carries a
   `next_action` telling you whether and how to retry.
@@ -70,10 +78,10 @@ tool that checks receipt chains offline.
 > Intuit application. The account-free path is your **own** registered Intuit
 > application against an Intuit **sandbox** company; loopback is all it can use, so
 > it is sandbox-only. Either way your QuickBooks reads run from your machine to
-> Intuit directly, and AppFolio is unaffected.
+> Intuit directly, and AppFolio and Dialpad are unaffected.
 
-We are not affiliated with, endorsed by, or sponsored by AppFolio, Inc. or Intuit
-Inc.; their services are governed by your agreements with them.
+We are not affiliated with, endorsed by, or sponsored by AppFolio, Inc., Intuit
+Inc., or Dialpad, Inc.; their services are governed by your agreements with them.
 
 ## Get started
 
@@ -107,9 +115,10 @@ There is no telemetry, no analytics, and no crash reporting, in any version. You
 credentials, your queries, your results, and your receipts stay on your machine — we
 hold no copy, and no interface of ours can reach them.
 
-For AppFolio, local reconciliation, `verify-receipts`, and QuickBooks against an Intuit
-sandbox company under your own registered Intuit application, that is the whole story:
-nothing transmitted to us, no service of ours in the path, no account to create.
+For AppFolio, Dialpad, local reconciliation, `verify-receipts`, and QuickBooks against
+an Intuit sandbox company under your own registered Intuit application, that is the
+whole story: nothing transmitted to us, no service of ours in the path, no account to
+create.
 
 Connecting a **production** QuickBooks company (from v1.4.0) is the one exception. It
 runs through our hosted connect service and needs a free terakota account, and we then

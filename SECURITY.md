@@ -1,6 +1,6 @@
 # terakota Security Advisory & Support Policy
 
-Version 1.1 — Effective 2026-08-13 — applies to the `terakota` and
+Version 1.2 — Effective 2026-08-13 — applies to the `terakota` and
 `verify-receipts` binaries and to the hosted connect service (the broker at
 `oauth.terakota.io` and the portal at `app.terakota.io`).
 
@@ -56,15 +56,15 @@ bug bounty is offered at this time.
 
 **Scope & safe harbor:** in scope — the released binaries, the release
 repository, terakota.io, **`oauth.terakota.io` (the connect broker), and
-`app.terakota.io` (the portal)**. Out of scope — AppFolio's and Intuit's systems
-(never test against accounts or systems you don't own; they have their own
-programs), social engineering, and physical attacks. Test the connect service
-only against your own account and your own QuickBooks company; do not attempt to
-reach another user's connection, and do not run volumetric or denial-of-service
-tests against it. We will not pursue legal action for good-faith research within
-this scope that respects privacy, avoids service disruption, and gives us the
-disclosure window; we treat reports as confidential and use them only to fix the
-issue and credit you.
+`app.terakota.io` (the portal)**. Out of scope — AppFolio's, Intuit's, and
+Dialpad's systems (never test against accounts or systems you don't own; they
+have their own programs), social engineering, and physical attacks. Test the
+connect service only against your own account and your own QuickBooks company;
+do not attempt to reach another user's connection, and do not run volumetric or
+denial-of-service tests against it. We will not pursue legal action for
+good-faith research within this scope that respects privacy, avoids service
+disruption, and gives us the disclosure window; we treat reports as
+confidential and use them only to fix the issue and credit you.
 
 ## 3. Support windows ("support-until")
 
@@ -101,11 +101,12 @@ path and honest advisories).
 
 This policy covers the binaries we sign and ship and the connect service we
 operate. It does not cover: forks or rebuilt binaries; the conduct or
-availability of AppFolio or Intuit APIs; credentials, tokens, keystores, device
-keys, or receipt chains on your machines (yours to protect — see the EULA §3); or
-AI agents that drive terakota. Receipt chains' evidence class and its limits are
-stated in the EULA §2 and the FAQ in the release repository — advisories cover
-software defects, not misuse of a correctly functioning tool.
+availability of AppFolio, Intuit, or Dialpad APIs; credentials, tokens,
+keystores, device keys, or receipt chains on your machines (yours to protect —
+see the EULA §3); or AI agents that drive terakota. Receipt chains' evidence
+class and its limits are stated in the EULA §2 and the FAQ in the release
+repository — advisories cover software defects, not misuse of a correctly
+functioning tool.
 
 Two boundaries worth stating plainly, because the connect service changes them.
 The token capsule the broker returns is sealed against anyone who can read the
@@ -144,6 +145,12 @@ long, and how to delete it. The Portal Account Terms at
 `https://app.terakota.io/terms` govern the account and the connect service.
 
 [Change log:
+v1.2 — Dialpad is named in the two scope statements, so its absence cannot be
+read as an invitation: Dialpad's systems join AppFolio's and Intuit's as out of
+scope for testing (§2), and Dialpad's API conduct and availability join what
+this policy does not cover (§4). No commitment changes — the Dialpad read path
+adds no host of ours, so the advisory classes (§1), the support windows (§3),
+and the connect-service commitments (§5) are untouched.
 v1.1 — the hosted connect service is brought in scope: safe harbor now covers
 `oauth.terakota.io` and `app.terakota.io` with testing rules for a credential
 surface (§2); incidents on that service are notified through accounts as well as
