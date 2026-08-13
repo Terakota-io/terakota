@@ -52,6 +52,31 @@ Every channel installs the same two binaries from the same signed archives, plus
 `EULA.md` and `THIRD_PARTY_NOTICES`. None of them is a substitute for verifying
 the release yourself — see **[verify.md](verify.md)**.
 
+## Upgrading
+
+Upgrade through the channel you installed with:
+
+    brew upgrade terakota                           # Homebrew
+    curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
+    sudo dpkg -i terakota_v1.4.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.4.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+
+For the MCP extension, download the new `.mcpb` for your platform and install it
+from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
+bundle. For a manual install, download the new archive, verify it per
+[verify.md](verify.md), and overwrite the binaries where you put them.
+`terakota version` tells you what you are running.
+
+Your credentials and your receipt chains carry over untouched. They live in your
+OS keychain and in terakota's own home directory — installing a release replaces
+binaries and nothing else.
+
+**Expect the first-run notice one more time after upgrading to v1.4.0.** It
+reprints when the terms version it pins changes, and v1.4.0 moves from terms 1.0
+to 1.1 — so that single reprint is the notice doing its job. It does not print
+again on an upgrade that leaves the terms unchanged. `terakota about` shows it
+any time.
+
 ## Where your credentials live
 
 Since v1.2.0 the default store is your **OS keychain** — macOS Keychain, Windows
