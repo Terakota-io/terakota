@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.3.1 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.4.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.3.1_linux_amd64.deb
-    sudo rpm -i  terakota_v1.3.1_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.4.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.4.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -131,9 +131,9 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.3.1_linux_amd64.tar.gz`,
-  `terakota_v1.3.1_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.3.1_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.4.0_linux_amd64.tar.gz`,
+  `terakota_v1.4.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.4.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
@@ -161,7 +161,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.3.1_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.4.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
