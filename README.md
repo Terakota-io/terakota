@@ -5,15 +5,20 @@ AppFolio and QuickBooks Online accounts you already run — using your own
 credentials, on your own machine — and records every read as a verifiable
 integrity receipt.
 
-It is read-only by construction, sends nothing to us, and needs no account with
-us. It ships with `verify-receipts`, a standalone tool that checks receipt chains
-offline.
+It is read-only by construction. AppFolio reads, local work, and `verify-receipts`
+send nothing to us and need no account with us; connecting a **production**
+QuickBooks company (from v1.4.0) runs through a hosted connect service we operate
+and needs a free terakota account. It ships with `verify-receipts`, a standalone
+tool that checks receipt chains offline.
 
 ## What it does
 
 - **Reads your systems with your credentials.** terakota connects to AppFolio and
   QuickBooks Online using credentials you supply, against accounts you are
-  authorized to access. Its only network connections are to those systems.
+  authorized to access. Reads always run from your machine to the vendor directly.
+  The only other host it ever talks to is our connect service, and only if you
+  connect a production QuickBooks company (from v1.4.0) — for authorization, token
+  renewal, and revocation, never for your data.
 - **Read-only by construction.** The binaries contain no code paths that write to
   the connected systems — a structural property of the shipped client, asserted by
   automated checks at build time.
@@ -50,13 +55,22 @@ offline.
 - **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
   bounds, and the source-system quirks it absorbs; every error carries a
   `next_action` telling you whether and how to retry.
-- **Zero phone-home.** No telemetry, no analytics, no crash reporting, no network
-  calls to any service we operate. We cannot see your credentials, queries,
-  results, or receipts.
+- **No telemetry, ever.** No telemetry, no analytics, no crash reporting — in any
+  version, in any mode. Your credentials, queries, results, and receipts stay on
+  your machine: we hold no copy, and no interface of ours can reach them. The only
+  calls terakota makes to a service of ours are a production QuickBooks
+  connection's authorization, token renewal, and revocation (from v1.4.0) —
+  renewal runs on its own, roughly hourly while you work. With no production
+  QuickBooks connection it contacts no host of ours at all.
 
-> **QuickBooks is sandbox-only in v1.** QuickBooks Online connections in this
-> release run against Intuit **sandbox** companies only; production QuickBooks
-> arrives in a later release. AppFolio reads are unaffected.
+> **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
+> connects through our hosted connect service at `oauth.terakota.io` and needs a
+> free terakota account — Intuit refuses loopback redirects on production apps, so
+> the exchange and every renewal have to run server-side under our registered
+> Intuit application. The account-free path is your **own** registered Intuit
+> application against an Intuit **sandbox** company; loopback is all it can use, so
+> it is sandbox-only. Either way your QuickBooks reads run from your machine to
+> Intuit directly, and AppFolio is unaffected.
 
 We are not affiliated with, endorsed by, or sponsored by AppFolio, Inc. or Intuit
 Inc.; their services are governed by your agreements with them.
@@ -89,15 +103,25 @@ notices). Source code is not published here.
 
 ## Privacy
 
-terakota sends **nothing** to its publisher. There is no telemetry, no analytics, no
-crash reporting, and no network call to any service we operate — so we cannot see your
-credentials, your queries, your results, or your receipts. There is no account to create.
+There is no telemetry, no analytics, and no crash reporting, in any version. Your
+credentials, your queries, your results, and your receipts stay on your machine — we
+hold no copy, and no interface of ours can reach them.
 
-Its only network connections are to the systems you point it at: your AppFolio instance
-and, if you connect it, Intuit's QuickBooks Online API. Your credentials rest in your
-operating system's keychain (macOS Keychain, Windows Credential Manager, or a Linux
-Secret Service) and never travel through command arguments or environment values.
-Receipts are written to a hash chain on your own machine.
+For AppFolio, local reconciliation, `verify-receipts`, and QuickBooks against an Intuit
+sandbox company under your own registered Intuit application, that is the whole story:
+nothing transmitted to us, no service of ours in the path, no account to create.
+
+Connecting a **production** QuickBooks company (from v1.4.0) is the one exception. It
+runs through our hosted connect service and needs a free terakota account, and we then
+hold that account plus an eleven-field connection record — metadata only, never your
+QuickBooks data, and no token we could read at rest. The reads themselves still run from
+your machine to Intuit directly; the connect service carries authorization, renewal, and
+revocation, and never a vendor data call.
+
+Your credentials rest in your operating system's keychain (macOS Keychain, Windows
+Credential Manager, or a Linux Secret Service) and never travel through command
+arguments or environment values. Receipts are written to a hash chain on your own
+machine.
 
 Full notice: **[docs/legal/PRIVACY.md](docs/legal/PRIVACY.md)** ·
 **https://terakota.io/privacy**

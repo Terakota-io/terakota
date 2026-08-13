@@ -1,6 +1,9 @@
 # Install
 
-There is no account to sign up for and nothing phones home. Pick a channel:
+Installing needs no account and no sign-up, and the binaries carry no telemetry,
+analytics, or crash reporting. (Connecting a **production** QuickBooks company —
+from v1.4.0 — needs a free terakota account; see [First run](#first-run).) Pick a
+channel:
 
 **Homebrew (macOS, Linux)**
 
@@ -132,10 +135,12 @@ verbatim, including the leading `v`:
   `terakota_v1.3.1_darwin_arm64.tar.gz`)
 - Windows: `.zip` (e.g. `terakota_v1.3.1_windows_amd64.zip`)
 
-> **QuickBooks is sandbox-only in v1.** QuickBooks Online connections in this
-> release run against Intuit **sandbox** companies only. Production QuickBooks
-> arrives in a later release. AppFolio reads are unaffected. Everything is
-> read-only by construction.
+> **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
+> connects through our hosted connect service and needs a free terakota account.
+> The account-free path is your **own** registered Intuit application against an
+> Intuit **sandbox** company — Intuit accepts the loopback redirect it uses for
+> sandbox only. AppFolio reads are unaffected, and everything is read-only by
+> construction.
 
 ## 1. Download
 
@@ -190,10 +195,19 @@ to the read below.
 
     terakota company add --company mybooks --base-url https://api.appfolio.com/api/v0
     terakota credentials set --company mybooks     # no-echo prompts; sealed in your OS keychain
-    terakota qbo connect --company mybooks         # optional: QuickBooks OAuth against an Intuit sandbox company
+    terakota qbo connect --company mybooks         # optional: connect QuickBooks Online
 
 `<yourdomain>.appfolio.com` is your web portal / Reports API address. The Database API
 terakota speaks lives at `api.appfolio.com/api/v0` for every customer.
+
+`qbo connect` has two paths (from v1.4.0). A **production** company connects through our
+hosted connect service at `oauth.terakota.io` and needs a free terakota account at
+`app.terakota.io` — Intuit refuses loopback redirects on production apps, so the exchange
+and every renewal run server-side under our registered Intuit application. An Intuit
+**sandbox** company can be connected under your **own** registered Intuit application
+instead, with the exchange and every renewal running locally against a loopback listener;
+that path needs no account. Reads run from your machine to Intuit directly either way.
+Disconnect with `terakota qbo disconnect --company mybooks`.
 
 The first run prints a one-time disclosure notice. You can re-show it any time
 with `terakota about`, and print the third-party license notices with
