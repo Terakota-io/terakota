@@ -69,7 +69,9 @@ bundle. For a manual install, download the new archive, verify it per
 
 Your credentials and your receipt chains carry over untouched. They live in your
 OS keychain and in terakota's own home directory — installing a release replaces
-binaries and nothing else.
+binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
+step attached: see the keystore note under
+[Where your credentials live](#where-your-credentials-live).
 
 **Expect the first-run notice one more time after upgrading to v1.4.0.** It
 reprints when the terms version it pins changes, and v1.4.0 moves from terms 1.0
