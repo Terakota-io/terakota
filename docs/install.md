@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.3.1 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.4.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.3.1_linux_amd64.deb
-    sudo rpm -i  terakota_v1.3.1_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.4.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.4.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -51,6 +51,33 @@ Two things worth knowing:
 Every channel installs the same two binaries from the same signed archives, plus
 `EULA.md` and `THIRD_PARTY_NOTICES`. None of them is a substitute for verifying
 the release yourself — see **[verify.md](verify.md)**.
+
+## Upgrading
+
+Upgrade through the channel you installed with:
+
+    brew upgrade terakota                           # Homebrew
+    curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
+    sudo dpkg -i terakota_v1.4.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.4.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+
+For the MCP extension, download the new `.mcpb` for your platform and install it
+from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
+bundle. For a manual install, download the new archive, verify it per
+[verify.md](verify.md), and overwrite the binaries where you put them.
+`terakota version` tells you what you are running.
+
+Your credentials and your receipt chains carry over untouched. They live in your
+OS keychain and in terakota's own home directory — installing a release replaces
+binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
+step attached: see the keystore note under
+[Where your credentials live](#where-your-credentials-live).
+
+**Expect the first-run notice one more time after upgrading to v1.4.0.** It
+reprints when the terms version it pins changes, and v1.4.0 moves from terms 1.0
+to 1.1 — so that single reprint is the notice doing its job. It does not print
+again on an upgrade that leaves the terms unchanged. `terakota about` shows it
+any time.
 
 ## Where your credentials live
 
@@ -131,9 +158,9 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.3.1_linux_amd64.tar.gz`,
-  `terakota_v1.3.1_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.3.1_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.4.0_linux_amd64.tar.gz`,
+  `terakota_v1.4.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.4.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
@@ -161,7 +188,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.3.1_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.4.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
