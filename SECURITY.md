@@ -1,7 +1,8 @@
 # terakota Security Advisory & Support Policy
 
-Version 1.0 — Effective 2026-07-24 — applies to the `terakota` and
-`verify-receipts` binaries.
+Version 1.1 — Effective 2026-08-13 — applies to the `terakota` and
+`verify-receipts` binaries and to the hosted connect service (the broker at
+`oauth.terakota.io` and the portal at `app.terakota.io`).
 
 ## 1. How we tell you about security problems
 
@@ -11,16 +12,24 @@ watchers and feed GitHub's alerting) and as **signed advisory files** in the
 repository's `advisories/` directory, verifiable exactly like a download. To be
 notified, watch the repository with security alerts enabled. We publish
 advisories for: vulnerabilities in our binaries, vulnerabilities inherited from
-embedded dependencies that are reachable in our usage, and integrity incidents
-affecting the release pipeline itself.
+embedded dependencies that are reachable in our usage, integrity incidents
+affecting the release pipeline itself, and security incidents affecting the
+connect service.
+
+For the connect service there is a second path, because there is someone to
+reach: **if an incident affects your terakota account or a connection you made
+through the service, we notify you through the account** (the email on it), in
+addition to publishing. That notification path is the reason a production
+QuickBooks connection requires an account at all — see the Privacy Notice §3a.
 
 Each advisory states: affected versions, severity (CVSS v4.0 score — with a
 v3.1 base score included for tooling compatibility — plus plain-language
 impact), whether the flaw is reachable in default configuration, the fixed
 version **or "no fix yet" with mitigations** (active exploitation is disclosed
-before a fix exists, not after), and workarounds if any. CVE IDs are requested
-for High/Critical issues where CVE-eligible (pipeline-integrity incidents may
-not be).
+before a fix exists, not after), and workarounds if any. For connect-service
+incidents, "affected versions" is replaced by the affected time window and the
+affected connections. CVE IDs are requested for High/Critical issues where
+CVE-eligible (pipeline-integrity and hosted-service incidents may not be).
 
 **If the release-signing key itself is compromised**, advisory signatures from
 it prove nothing — so key rotation and emergencies use an out-of-band path: a
@@ -46,12 +55,16 @@ fixes; shorter if actively exploited). We credit reporters who want credit. No
 bug bounty is offered at this time.
 
 **Scope & safe harbor:** in scope — the released binaries, the release
-repository, and terakota.io. Out of scope — AppFolio's and Intuit's systems
+repository, terakota.io, **`oauth.terakota.io` (the connect broker), and
+`app.terakota.io` (the portal)**. Out of scope — AppFolio's and Intuit's systems
 (never test against accounts or systems you don't own; they have their own
-programs), social engineering, and physical attacks. We will not pursue legal
-action for good-faith research within this scope that respects privacy, avoids
-service disruption, and gives us the disclosure window; we treat reports as
-confidential and use them only to fix the issue and credit you.
+programs), social engineering, and physical attacks. Test the connect service
+only against your own account and your own QuickBooks company; do not attempt to
+reach another user's connection, and do not run volumetric or denial-of-service
+tests against it. We will not pursue legal action for good-faith research within
+this scope that respects privacy, avoids service disruption, and gives us the
+disclosure window; we treat reports as confidential and use them only to fix the
+issue and credit you.
 
 ## 3. Support windows ("support-until")
 
@@ -75,18 +88,68 @@ path and honest advisories).
 - Release artifacts are immutable once published (withdrawal per Section 1
   aside); fixes ship as new releases only.
 - When a release ages out, it keeps working as far as we are concerned —
-  nothing phones home and nothing is disabled by us — but it no longer
-  receives advisories tailored to it. Whether an old build still functions
-  against vendor APIs is outside our control.
+  nothing is disabled by us, and no build reports anything to us on its own,
+  with one stated exception: from terakota v1.4.0, a production QuickBooks
+  connection made through our connect service renews its token against our
+  broker automatically (EULA §4). Whether an old build still functions against
+  vendor APIs is outside our control.
+- Support-until dates are a property of **binaries**. The connect service is
+  operated, not versioned: it is covered by this policy while it runs, and
+  Section 5 states what we commit to for it.
 
 ## 4. Scope honesty
 
-This policy covers the binaries we sign and ship. It does not cover: forks or
-rebuilt binaries; the conduct or availability of AppFolio or Intuit APIs;
-credentials, tokens, keystores, or receipt chains on your machines (yours to
-protect — see the EULA §3); or AI agents that drive terakota. Receipt chains'
-evidence class and its limits are stated in the EULA §2 and the FAQ in the
-release repository — advisories cover software defects, not misuse of a
-correctly functioning tool.
+This policy covers the binaries we sign and ship and the connect service we
+operate. It does not cover: forks or rebuilt binaries; the conduct or
+availability of AppFolio or Intuit APIs; credentials, tokens, keystores, device
+keys, or receipt chains on your machines (yours to protect — see the EULA §3); or
+AI agents that drive terakota. Receipt chains' evidence class and its limits are
+stated in the EULA §2 and the FAQ in the release repository — advisories cover
+software defects, not misuse of a correctly functioning tool.
 
-[Change log: v1.0 — first published version.]
+Two boundaries worth stating plainly, because the connect service changes them.
+The token capsule the broker returns is sealed against anyone who can read the
+URLs and browser history involved in an authorization; it is not a defense
+against an attacker who already controls your machine's processes or keychain.
+And a revoked or suspended connection stops new authorizations and stops token
+renewal immediately — but an access token already issued keeps working until it
+expires, so revocation is fast, not instantaneous.
+
+## 5. The connect service: what we commit to
+
+The connect service is the tier that handles credential material, so it carries
+commitments the binaries do not:
+
+- **Incident plan.** We maintain a written plan for the connect service
+  covering rotation of the Intuit client secret, an emergency service-wide
+  disable, notification of affected users through their accounts, and a
+  documented path to reconnect afterwards. Section 1 is how you hear about it.
+- **Independent review before we serve anyone else.** An independent
+  adversarial security review of the connect service happens before the service
+  serves its first real customer. Until then the connect route is not open to
+  third parties.
+- **No dumps, no live poking.** Production is not instrumented dynamically and
+  is not dumped. The client secret lives in the host's secret store and never
+  appears in a command line, a repository, or a chat.
+- **What the broker is not.** It never terminates business-data traffic, never
+  proxies a vendor data API, never accepts customer-authored logic, and is
+  never an agent or MCP transport. Its egress is allow-listed to Intuit's
+  token/revocation host and our own control store — nothing else.
+
+## 6. Related documents
+
+The EULA §2 and §4 describe what the Software does and every connection it makes
+to us. The Privacy Notice §3a describes what the connect service stores, for how
+long, and how to delete it. The Portal Account Terms at
+`https://app.terakota.io/terms` govern the account and the connect service.
+
+[Change log:
+v1.1 — the hosted connect service is brought in scope: safe harbor now covers
+`oauth.terakota.io` and `app.terakota.io` with testing rules for a credential
+surface (§2); incidents on that service are notified through accounts as well as
+published (§1); a new §5 records the incident plan, the independent review before
+the first real customer, and the operational fences; the "nothing phones home"
+line in §3 gains its one stated exception (automatic token refresh from terakota
+v1.4.0); §4 adds the capsule threat boundary and the revocation-versus-expiry
+boundary.
+v1.0 — first published version.]
