@@ -106,11 +106,11 @@ your agreements with them.
 - **Production QuickBooks depends on a service we run.** Data already cached on
   your machine stays usable offline, and an unexpired access token keeps working
   without us. But the initial authorization, every token renewal, and revocation
-  all require the broker. Renewal runs automatically during normal use — in
-  practice at least once each time you run a production QuickBooks command,
-  because the access token is never written to disk. (Intuit's access tokens
-  last about an hour; that is the token's lifetime, not how often we are
-  called.) If the broker is unavailable, fresh production QuickBooks reads stall
+  all require the broker. Renewal runs automatically during normal use — the
+  access token and its expiry are stored sealed in your local keystore beside
+  the refresh token, and the Software renews when the token nears expiry.
+  (Intuit's access tokens last about an hour, so in active use renewal is
+  roughly hourly.) If the broker is unavailable, fresh production QuickBooks reads stall
   once the access token expires; if it is unavailable for longer than the
   refresh token's lifetime, you have to re-consent. AppFolio and all local
   operation are unaffected. We state this plainly because "AS AVAILABLE" in
@@ -168,9 +168,9 @@ reporting. It contacts exactly two classes of host we operate, and nothing else:
    you started in your browser — for production QuickBooks connections made
    through our connect service (from terakota v1.4.0). The authorization and
    the revocation happen when you ask for them. **The refresh does not — it
-   runs automatically during normal use**, in practice at least once each time
-   you run a production QuickBooks command, because the access token is never
-   written to disk. That is the one place the Software talks to us without you
+   runs automatically during normal use**, whenever the sealed access token
+   nears expiry (roughly hourly in active use; both tokens live sealed in your
+   local keystore). That is the one place the Software talks to us without you
    asking, and it is why the older "contacts no service of ours on its own"
    wording is gone.
 

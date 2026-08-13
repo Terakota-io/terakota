@@ -32,8 +32,8 @@ classes:
    you started in your browser — for production QuickBooks connections made
    through our connect service (from terakota v1.4.0). The authorization and
    the revocation happen when you ask for them. The refresh runs automatically
-   during normal use, in practice at least once each time you run a production
-   QuickBooks command, because the access token is never written to disk.
+   during normal use, whenever the sealed access token nears expiry — roughly
+   hourly in active use; both tokens are stored sealed in your local keystore.
 
 If you use AppFolio, local reconciliation, receipts, `verify-receipts`, or an
 Intuit sandbox company under your own registered Intuit application, the
@@ -183,7 +183,11 @@ connection within one access-token lifetime. The audit log is append-only for
 integrity: rather than deleting rows, we replace the identifiers in them with a
 tombstone, keeping the event and dropping the person. Audit entries are retained
 for 365 days. Deletions reach the next operator backup rotation; for an erasure
-request we force a fresh backup rather than waiting.
+request we force a fresh backup rather than waiting. Backups taken before an
+erasure can retain copies of the erased records until they age out of rotation
+and are destroyed; backups are held by the operator alone and are never used to
+serve traffic, and if a backup is ever restored, the erasure is re-run against
+the restored data.
 
 **Who else touches this surface.** Fly.io hosts the broker, the portal, and the
 Postgres control store (US, iad). Auth0/Okta handles identity. Cloudflare
