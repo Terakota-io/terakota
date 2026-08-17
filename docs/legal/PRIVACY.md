@@ -138,7 +138,7 @@ fields and nothing else:
 6. keyed HMAC of the normalized realm id
 7. status
 8. scope
-9. created and last-refresh timestamps
+9. created, last-refresh and revocation timestamps
 10. token-generation HMAC
 11. revocation reason
 
@@ -247,6 +247,12 @@ connection records, and flight rows; the append-only audit log is tombstoned
 rather than rewritten, as Section 3a describes.
 
 [Change log:
+Revision 2026-08-17 (terms-pack v1.2) — item 9 of the connection-record
+enumeration now names the revocation timestamp (`revoked_at`) beside the
+created and last-refresh timestamps; the field was added so the 90-day
+erasure of revoked connection records published in Account Terms Section 9.3
+is executable. No new data category — a stored-field disclosure
+clarification, and the enumeration stays closed at eleven items.
 v1.2 — Dialpad is named in the enumerations that were already true of it: the
 lede's account-free mode, the "makes no call to any host of ours" list, the
 never-transmitted list (§1), and the who-this-applies-to carve-out (§3a). What
