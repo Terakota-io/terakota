@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.5.0 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.6.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.5.0_linux_amd64.deb
-    sudo rpm -i  terakota_v1.5.0_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.6.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.6.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -58,8 +58,8 @@ Upgrade through the channel you installed with:
 
     brew upgrade terakota                           # Homebrew
     curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
-    sudo dpkg -i terakota_v1.5.0_linux_amd64.deb    # .deb — installs over the old
-    sudo rpm -U  terakota_v1.5.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+    sudo dpkg -i terakota_v1.6.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.6.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
 
 For the MCP extension, download the new `.mcpb` for your platform and install it
 from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
@@ -73,11 +73,14 @@ binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
 step attached: see the keystore note under
 [Where your credentials live](#where-your-credentials-live).
 
-**Expect the first-run notice one more time after upgrading to v1.5.0.** It
-reprints when the terms version it pins changes, and v1.5.0 moves from terms 1.1
-to 1.2 — so that single reprint is the notice doing its job. It does not print
-again on an upgrade that leaves the terms unchanged. `terakota about` shows it
-any time.
+**v1.6.0 does not reprint the first-run notice.** It reprints only when the terms
+version it pins changes, and v1.6.0 stays on terms 1.2 — the version v1.5.0
+already pinned. `terakota about` shows the notice any time.
+
+One upgrade note specific to v1.6.0: starting a **new** production QuickBooks
+connection requires v1.6.0 or later, because the connect ceremony moved to a back
+channel and the older URL form is refused server-side. Refreshing a connection you
+already made is unaffected on any version. See [First run](#first-run).
 
 ## Where your credentials live
 
@@ -158,16 +161,18 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.5.0_linux_amd64.tar.gz`,
-  `terakota_v1.5.0_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.5.0_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.6.0_linux_amd64.tar.gz`,
+  `terakota_v1.6.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.6.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
 > The account-free path is your **own** registered Intuit application against an
 > Intuit **sandbox** company — Intuit accepts the loopback redirect it uses for
-> sandbox only. AppFolio and Dialpad reads are unaffected, and everything is
-> read-only by construction.
+> sandbox only. From v1.6.0 the production ceremony runs on a back channel and the
+> CLI prints a pairing code to match against the consent page, so starting a **new**
+> production connection needs v1.6.0 or later. AppFolio and Dialpad reads are
+> unaffected, and everything is read-only by construction.
 
 ## 1. Download
 
@@ -188,7 +193,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.5.0_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.6.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
@@ -237,6 +242,15 @@ instead, with the exchange and every renewal running locally against a loopback 
 that path needs no account. Reads run from your machine to Intuit directly either way.
 Disconnect with `terakota qbo disconnect --company mybooks`.
 
+From v1.6.0 the production ceremony runs on a back channel. The CLI registers the
+connection keys with the connect service directly, so the browser you are sent to carries
+only an opaque handle and no key material. The CLI prints a **pairing code**: check it
+matches the code the consent page shows before you approve. If the two differ, cancel
+there and run the command again — something rewrote the request on its way.
+Because the older URL form is refused server-side, starting a **new** production
+connection requires v1.6.0 or later; refreshing a connection you already made is
+unaffected.
+
 `dialpad connect` (from v1.5.0) is simpler: no OAuth ceremony, no account with us. It
 prompts no-echo for a Dialpad API key you issue in your own Dialpad account and seals it
 into the keystore alongside the company's other credentials — that key is the whole
@@ -257,6 +271,15 @@ Then any read tool works, e.g.:
     terakota appfolio_bills_list --company mybooks --updated-from 2026-07-01T00:00:00Z
 
 Time bounds are RFC3339.
+
+To hand the work off, `terakota evidence --company mybooks --out pack.zip` (from
+v1.6.0) composes what terakota executed on the agent's behalf into one self-contained
+pack — `receipts.jsonl`, `receipts.csv`, a printable `timeline.html`, `manifest.json`,
+and a `VERIFY.md` walkthrough. An `--out` path ending in `.zip` writes an archive; any
+other path writes a directory, refused if it already holds anything. It reads the local
+chain only and emits no read receipt, and it is verify-gated: a chain that fails
+verification writes nothing at all. Whoever receives the pack re-checks it offline with
+`verify-receipts`, with no terakota process running — see [verify.md](verify.md).
 
 ## MCP mode
 

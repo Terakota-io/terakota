@@ -18,6 +18,21 @@ stated limits:
   is stored under your control, so treat receipts as integrity evidence for a
   chain you custodied and produced — not as third-party attestation.
 
+**What is the evidence pack?** From v1.6.0, `terakota evidence --company <id> --out
+pack.zip` composes a company's local receipt chain into one self-contained set you
+can hand to someone: `receipts.jsonl`, a scannable `receipts.csv`, a printable
+`timeline.html` — one plain-English row per execution, showing what terakota
+executed on the agent's behalf, from which system, with the caller's stated intent
+labeled as caller-supplied and unverified — plus `manifest.json` and a `VERIFY.md`
+walkthrough. It holds no vendor record bodies, and composition is verify-gated: a
+chain that fails verification writes nothing. The recipient re-verifies it offline
+with `verify-receipts`, no terakota process running. The evidence class is
+**artifact integrity**, and it inherits the limits above: a partial change breaks
+the hash linkage and shows, while a wholesale replacement is only detectable
+against a chain head you recorded separately — so write down `chain_head` from
+`manifest.json` when you receive a pack. The pack's `VERIFY.md` states all of this
+in full.
+
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
 none, not even optional ones, in any version. The only calls it makes to a service
 of ours belong to a production QuickBooks connection made through our connect
@@ -63,8 +78,13 @@ redirect URIs for sandbox apps only. That path returns the authorization to a
 listener on your own machine, so it can reach Intuit **sandbox** companies and
 nothing else. A **production** company therefore connects through our hosted
 connect service (from v1.4.0), where the exchange and every renewal run server-side
-under our registered Intuit application, gated by a free terakota account. AppFolio
-and Dialpad reads are unaffected.
+under our registered Intuit application, gated by a free terakota account. From
+v1.6.0 that ceremony runs on a back channel: the CLI registers the connection keys
+with the connect service directly, the browser carries only an opaque handle, and
+the CLI prints a pairing code to match against the consent page before you approve.
+Starting a **new** production connection therefore needs v1.6.0 or later — the older
+URL form is refused server-side — while refreshing an existing connection is
+unaffected. AppFolio and Dialpad reads are unaffected too.
 
 **What does "snippet-tier" mean for the Dialpad tools?** That the three Dialpad
 read tools — `dialpad_users_list`, `dialpad_offices_list`, and
