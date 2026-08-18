@@ -60,6 +60,16 @@ service we operate and needs a free terakota account. It ships with
   other read. This family ships **snippet-tier**: it is verified against a
   maintainer-held Dialpad tenant, not yet validated on customer accounts. Nothing
   here claims these tools have run on yours.
+- **A hand-off evidence pack in one command** *(since v1.6.0)*. `terakota evidence
+  --company mybooks --out pack.zip` composes what terakota executed on the agent's
+  behalf into one self-contained set: `receipts.jsonl`, a scannable `receipts.csv`,
+  a printable `timeline.html` — one plain-English row per execution, what was read
+  and when, with the caller's stated intent labeled as caller-supplied and
+  unverified — plus a `manifest.json` and a `VERIFY.md` walkthrough. Composition is
+  verify-gated: a chain that fails verification writes nothing at all. The pack
+  re-verifies offline with `verify-receipts`, no terakota process running, and it
+  carries no vendor record bodies. The evidence class is **artifact integrity**;
+  the pack's own `VERIFY.md` states what that does and does not establish.
 - **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
   bounds, and the source-system quirks it absorbs; every error carries a
   `next_action` telling you whether and how to retry.
@@ -77,8 +87,12 @@ service we operate and needs a free terakota account. It ships with
 > the exchange and every renewal have to run server-side under our registered
 > Intuit application. The account-free path is your **own** registered Intuit
 > application against an Intuit **sandbox** company; loopback is all it can use, so
-> it is sandbox-only. Either way your QuickBooks reads run from your machine to
-> Intuit directly, and AppFolio and Dialpad are unaffected.
+> it is sandbox-only. From v1.6.0 the production ceremony runs on a back channel —
+> the browser carries only an opaque handle, and the CLI prints a pairing code to
+> match against the consent page before you approve — so starting a **new**
+> production connection needs v1.6.0 or later; refreshing an existing one does not.
+> Either way your QuickBooks reads run from your machine to Intuit directly, and
+> AppFolio and Dialpad are unaffected.
 
 We are not affiliated with, endorsed by, or sponsored by AppFolio, Inc., Intuit
 Inc., or Dialpad, Inc.; their services are governed by your agreements with them.
