@@ -33,6 +33,42 @@ against a chain head you recorded separately — so write down `chain_head` from
 `manifest.json` when you receive a pack. The pack's `VERIFY.md` states all of this
 in full.
 
+**What does `terakota reconcile` prove?** That the verdict it recorded was derived from
+reads that are on your chain — and nothing beyond that. From v1.7.0, `terakota reconcile
+--company <id> --from <date> --to <date>` pulls both connected sources over a closed
+posting-date window, runs the deterministic matcher over the journal entries it finds,
+and records the links and the verdict on your local chain; every pull is an ordinary
+receipted read, so the lineage is checkable offline like any other read. It does **not**
+establish that your books are correct. Its coverage is stated rather than assumed: any
+partial leg makes the run partial and no `missing` is asserted, a failed page fails the
+whole run instead of minting a verdict off half a window, and two classes — `backdated`
+and `edited_after_rekey` — are declared **not detectable** on this shape rather than
+reported as zero, because they need persisted state that does not exist on your machine.
+Every correlation key reads un-attested: `derivation: key` carries no proven uniqueness.
+Reconcile is verified on synthetic two-source journals and on a read-only live AppFolio
+rail; no customer's books have been reconciled with it yet. [reconcile.md](reconcile.md)
+carries the full statement, including what a link record discloses when it leaves your
+machine.
+
+**Can an agent confirm a link?** No. `links-confirm` and `links-revoke` require an
+interactive controlling terminal and have no MCP counterpart — the server exposes no
+confirm tool at all — so the review verbs are not reachable from a transport terakota
+governs. That is a bar rather than a proof, and the refusal says so itself: a pty can be
+faked by anything with shell access, so what the fence buys is that an agent cannot
+confirm a link by accident on its way past, and the receipt each verb writes names the
+review **surface** (`human:cli`), never an actor.
+
+**Why did `registry_version` change?** Because v1.7.0 added the three composite tool rows
+to the static manifest and closed each row's receipt-contract declaration into an enum,
+and `registry_version` is a hash over the whole table — so it rehashes as a whole:
+`32e19c69…` (v1.5.0 / v1.6.0) becomes
+`52c6473b294269cfc5b9aab6fd68254cab78795e32e53ffe0277b84909340422`, with the registry
+growing from 39 to 42 tools. Receipts minted by v1.7.0 carry the new value. It is not a
+break — `verify-receipts` grades the chain, not the registry value, so a chain holding
+receipts from both versions still verifies. One thing does need action: **existing MCP
+list cursors are invalidated**, so re-issue the list call without a cursor after
+upgrading.
+
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
 none, not even optional ones, in any version. The only calls it makes to a service
 of ours belong to a production QuickBooks connection made through our connect

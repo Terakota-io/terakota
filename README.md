@@ -70,6 +70,35 @@ service we operate and needs a free terakota account. It ships with
   re-verifies offline with `verify-receipts`, no terakota process running, and it
   carries no vendor record bodies. The evidence class is **artifact integrity**;
   the pack's own `VERIFY.md` states what that does and does not establish.
+- **Reconcile one company's journals on your own machine** *(since v1.7.0)*.
+  `terakota reconcile --company mybooks --from 2026-06-01 --to 2026-06-30` pulls both
+  connected sources over a closed posting-date window (both days included), runs the
+  deterministic matcher over the journal entries it finds, and records the links and
+  the run's verdict on your local chain. Every pull is an ordinary receipted read, so
+  the verdict is derived from evidence the chain already holds. The matching rules come
+  from `<config>/companies/<id>/reconcile.yaml` and nowhere else; a company without one
+  is refused, and the CLI never writes one for you. A link the matcher minted is a
+  claim, not an approval: `links-list` shows what linked to what on which key, with its
+  derivation and whether a person has acted on it, and `links-confirm` / `links-revoke`
+  chain a reclass receipt before they move the local projection, under the review
+  surface `human:cli`. Both require a controlling terminal and have no MCP counterpart
+  — there is no confirm tool on that transport. What the verdict covers is bounded on
+  purpose: coverage governs absence, a failed page fails the whole run rather than mint
+  a verdict off half a window, and two classes — `backdated` and `edited_after_rekey` —
+  are declared **not detectable** on this shape rather than reported as zero, because
+  they need persisted state that does not exist locally. Read this before sharing
+  anything: link records carry the correlation key material that formed them — for
+  exact-dimension links that includes the entry's date, amount and account set.
+  Reconcile is verified on synthetic two-source journals and on a read-only live
+  AppFolio rail; no customer's books have been reconciled with it yet. The walkthrough
+  is [docs/reconcile.md](docs/reconcile.md).
+- **Reconcile from an agent session, start-and-poll** *(since v1.7.0)*. The MCP server
+  gains three composite tools: `reconcile_start` returns a run id and keeps running,
+  `reconcile_status` reports that run's recorded state — window, coverage, counts by
+  class, the classes it could not reach, and the lineage of the link set the verdict
+  stands on — and `links_list` reads the same link rows from local state. A synchronous
+  reconcile over the agent transport is barred, one run per company is live at a time,
+  and the two local-state reads execute no vendor call and record nothing.
 - **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
   bounds, and the source-system quirks it absorbs; every error carries a
   `next_action` telling you whether and how to retry.
@@ -111,6 +140,7 @@ On Windows, download the signed `.zip` from
 - **Install — all channels and the manual path:** [docs/install.md](docs/install.md)
 - **Use it inside Claude Desktop (`.mcpb` extension), start to finish:**
   [docs/install.md](docs/install.md#use-terakota-as-an-mcp-extension)
+- **Reconcile two sources over a window:** [docs/reconcile.md](docs/reconcile.md)
 - **Verify your download:** [docs/verify.md](docs/verify.md)
 - **FAQ — what receipts do and do not prove:** [docs/faq.md](docs/faq.md)
 

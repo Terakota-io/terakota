@@ -26,8 +26,8 @@ terakota releases are signed with a **key** (not keyless), and the public key
 ships with the release as `cosign.pub`:
 
     cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
-      --signature terakota_v1.6.0_linux_amd64.tar.gz.sig \
-      terakota_v1.6.0_linux_amd64.tar.gz
+      --signature terakota_v1.7.0_linux_amd64.tar.gz.sig \
+      terakota_v1.7.0_linux_amd64.tar.gz
 
 `--insecure-ignore-tlog=true` is correct here: this release does **not** use a
 transparency log. The flag name is cosign's, not a warning about your download.
@@ -54,8 +54,8 @@ same two steps apply, with the package filename in place of the archive:
 
     sha256sum --check --ignore-missing SHA256SUMS
     cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
-      --signature terakota_v1.6.0_linux_amd64.deb.sig \
-      terakota_v1.6.0_linux_amd64.deb
+      --signature terakota_v1.7.0_linux_amd64.deb.sig \
+      terakota_v1.7.0_linux_amd64.deb
 
 The packages are **not** GPG-signed for `apt`/`dnf`; the cosign signature above
 is the signature. Note also that a package is a repackaging of the matching
@@ -63,8 +63,8 @@ archive, never a separate build: the binaries inside it are byte-identical to th
 ones in `terakota_<tag>_linux_<arch>.tar.gz`, and the release pipeline asserts
 that by digest before publishing. You can check it yourself:
 
-    dpkg-deb --fsys-tarfile terakota_v1.6.0_linux_amd64.deb | tar -xO ./usr/bin/terakota | sha256sum
-    tar -xzOf terakota_v1.6.0_linux_amd64.tar.gz terakota | sha256sum
+    dpkg-deb --fsys-tarfile terakota_v1.7.0_linux_amd64.deb | tar -xO ./usr/bin/terakota | sha256sum
+    tar -xzOf terakota_v1.7.0_linux_amd64.tar.gz terakota | sha256sum
 
 ## 3. SBOM and provenance (what the extra files are)
 
@@ -120,6 +120,25 @@ That key is public by design; the authoritative copy is pinned in the v1.6.0
 release notes, and taking it from there rather than from the pack is the point — a
 key that travelled inside the file it authenticates would prove nothing.
 
+**From v1.7.0**, when the chain carries a reconcile, the pack carries it too: the link pairs, the review
+reclass records, the matcher-run completion records and the reconciliation verdicts, each
+rendered in `timeline.html` in plain English beside the reads it stands on.
+`verify-receipts` grades those records **and the ordering contract between them** — a
+link result has to follow its own intent, a supersede cannot precede the link it sets
+aside, and a link chained after its run's completion record is out of order.
+
+The manifest then gains a `correlation` block: the verdict's window, the classes that
+verdict declared it could not reach, and its lineage — the `link_set_hash`, the
+derivation/confirmation mix of the links it stood on, and the
+`correlation_config_version` those links were evaluated under. It renders **one** verdict,
+the newest that stood on a link set, and `earlier_records_exist` says whether others sit
+behind it on the chain.
+
+Every pack carrying link material also carries the disclosure that rides every surface
+moving chain content off the machine: *link records carry the correlation key material
+that formed them — for exact-dimension links that includes the entry's date, amount and
+account set.* Read [reconcile.md](reconcile.md) before you hand one to anybody.
+
 **What a pass establishes.** The evidence class is **artifact integrity**. The
 records are hash-linked, so a partial change — one edited row, a truncated file, a
 corrupted byte — breaks the linkage and surfaces in every check above. A wholesale
@@ -128,4 +147,6 @@ the result is internally consistent. The remedy sits outside the pack and costs 
 line — write down the `chain_head` from `manifest.json` when you receive a pack, and
 a pack produced later with a different head is a different pack. The pack's own
 `VERIFY.md` carries the full statement, including the by-hand procedure with stdlib
-tools; read it before you rely on the pack.
+tools; read it before you rely on the pack. For a reconcile verdict in the pack, a pass
+establishes that the verdict is derived from the chained reads and the link set it names
+— not that the books are right.
