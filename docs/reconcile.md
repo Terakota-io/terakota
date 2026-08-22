@@ -8,8 +8,7 @@ chain, and prints one response envelope on stdout.
     terakota reconcile --company mybooks --from 2026-06-01 --to 2026-06-30 \
                        [--progress json|plain|off] [--intent "june close"] [--home <dir>]
 
-Honest tier: reconcile is verified on synthetic two-source journals and on a read-only
-live AppFolio rail; no customer's books have been reconciled with it yet.
+Honest tier: reconcile is verified on synthetic two-source journals; no customer's books have been reconciled with it yet.
 
 ## The window
 
@@ -242,6 +241,5 @@ time out where one blocking `terakota reconcile` does not.
 no CLI verb yet that reads a run's own record; `links-list --run-id <id>` is how you
 reach a run's links from the terminal.
 
-v1.7.0 moved the tool registry, and one thing on this transport needs action after
-upgrading: **existing MCP list cursors are invalidated — re-issue the list call without a
-cursor.** See [install.md](install.md#upgrading).
+v1.7.0 moved the tool registry. List cursors are unaffected — a cursor binds to its
+collection and cursor format, not to the registry. See [install.md](install.md#upgrading).

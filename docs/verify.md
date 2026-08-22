@@ -81,7 +81,7 @@ Each release also carries, per target:
 
 These are supplementary evidence about how the artifacts were built. Steps 1 and 2
 are what you need to trust a download; the SBOM and provenance are there when you
-want to inspect or audit further.
+want to inspect further.
 
 ## Verifying receipt chains is a different thing
 

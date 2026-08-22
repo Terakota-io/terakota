@@ -45,8 +45,7 @@ whole run instead of minting a verdict off half a window, and two classes — `b
 and `edited_after_rekey` — are declared **not detectable** on this shape rather than
 reported as zero, because they need persisted state that does not exist on your machine.
 Every correlation key reads un-attested: `derivation: key` carries no proven uniqueness.
-Reconcile is verified on synthetic two-source journals and on a read-only live AppFolio
-rail; no customer's books have been reconciled with it yet. [reconcile.md](reconcile.md)
+Reconcile is verified on synthetic two-source journals; no customer's books have been reconciled with it yet. [reconcile.md](reconcile.md)
 carries the full statement, including what a link record discloses when it leaves your
 machine.
 
@@ -65,9 +64,8 @@ and `registry_version` is a hash over the whole table — so it rehashes as a wh
 `52c6473b294269cfc5b9aab6fd68254cab78795e32e53ffe0277b84909340422`, with the registry
 growing from 39 to 42 tools. Receipts minted by v1.7.0 carry the new value. It is not a
 break — `verify-receipts` grades the chain, not the registry value, so a chain holding
-receipts from both versions still verifies. One thing does need action: **existing MCP
-list cursors are invalidated**, so re-issue the list call without a cursor after
-upgrading.
+receipts from both versions still verifies. List cursors are unaffected: a cursor binds to its collection and cursor
+format, not to the registry, so a walk started on v1.6.0 continues on v1.7.0.
 
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
 none, not even optional ones, in any version. The only calls it makes to a service

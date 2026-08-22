@@ -79,9 +79,9 @@ already pinned. `terakota about` shows the notice any time.
 
 **The tool registry moved in v1.7.0**, so receipts minted by v1.7.0 carry a new
 `registry_version`. Nothing breaks: `verify-receipts` grades the chain, not the
-registry value, so a chain holding receipts from both versions still verifies. One
-thing does need action — **existing MCP list cursors are invalidated**: re-issue the
-list call without a cursor after upgrading.
+registry value, so a chain holding receipts from both versions still verifies. List
+cursors are unaffected: a cursor binds to its collection and cursor format, not to the
+registry, so a walk started on v1.6.0 continues on v1.7.0.
 
 One upgrade note carried from v1.6.0: starting a **new** production QuickBooks
 connection requires v1.6.0 or later, because the connect ceremony moved to a back
