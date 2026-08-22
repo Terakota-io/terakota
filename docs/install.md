@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.6.0 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.7.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.6.0_linux_amd64.deb
-    sudo rpm -i  terakota_v1.6.0_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.7.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.7.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -58,8 +58,8 @@ Upgrade through the channel you installed with:
 
     brew upgrade terakota                           # Homebrew
     curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
-    sudo dpkg -i terakota_v1.6.0_linux_amd64.deb    # .deb — installs over the old
-    sudo rpm -U  terakota_v1.6.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+    sudo dpkg -i terakota_v1.7.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.7.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
 
 For the MCP extension, download the new `.mcpb` for your platform and install it
 from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
@@ -73,11 +73,20 @@ binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
 step attached: see the keystore note under
 [Where your credentials live](#where-your-credentials-live).
 
-**v1.6.0 does not reprint the first-run notice.** It reprints only when the terms
-version it pins changes, and v1.6.0 stays on terms 1.2 — the version v1.5.0
+**v1.7.0 does not reprint the first-run notice.** It reprints only when the terms
+version it pins changes, and v1.7.0 stays on terms 1.2 — the version v1.5.0
 already pinned. `terakota about` shows the notice any time.
 
-One upgrade note specific to v1.6.0: starting a **new** production QuickBooks
+**The tool registry moved in v1.7.0**, so receipts minted by v1.7.0 carry a new
+`registry_version`. Nothing breaks: `verify-receipts` grades the chain, not the
+registry value, so a chain holding receipts from both versions still verifies. List
+cursors are unaffected: a cursor binds to its collection and cursor format, not to the
+registry, so a walk started on v1.6.0 continues on v1.7.0. Continuing a walk has its own
+rules, and the upgrade does not change them: pass `--company` — required on every
+invocation, cursor or not — and the same non-default `--home`, and pass no filter flag
+alongside `--cursor`. Only `--intent` may ride with it.
+
+One upgrade note carried from v1.6.0: starting a **new** production QuickBooks
 connection requires v1.6.0 or later, because the connect ceremony moved to a back
 channel and the older URL form is refused server-side. Refreshing a connection you
 already made is unaffected on any version. See [First run](#first-run).
@@ -161,9 +170,9 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.6.0_linux_amd64.tar.gz`,
-  `terakota_v1.6.0_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.6.0_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.7.0_linux_amd64.tar.gz`,
+  `terakota_v1.7.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.7.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
@@ -193,7 +202,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.6.0_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.7.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
@@ -271,6 +280,18 @@ Then any read tool works, e.g.:
     terakota appfolio_bills_list --company mybooks --updated-from 2026-07-01T00:00:00Z
 
 Time bounds are RFC3339.
+
+`terakota reconcile --company mybooks --from 2026-06-01 --to 2026-06-30` (from v1.7.0)
+reconciles both connected sources' journals over one closed posting-date window: both
+sides pulled through receipted reads, the deterministic matcher over the journal entries
+they release, and the links plus the run verdict recorded on the local chain. It needs
+`<config>/companies/mybooks/reconcile.yaml` first — the matching rules come from that
+path and nowhere else, there is no `--config` flag, and the CLI never writes the file
+for you; a company without one is refused, with the path it looked at in the refusal.
+Review what the matcher formed with `terakota links-list`, and confirm or withdraw a
+link with `links-confirm` / `links-revoke`, both of which need a controlling terminal.
+Full walkthrough, including what the verdict does and does not cover and what leaves the
+machine with a link record: **[reconcile.md](reconcile.md)**.
 
 To hand the work off, `terakota evidence --company mybooks --out pack.zip` (from
 v1.6.0) composes what terakota executed on the agent's behalf into one self-contained
