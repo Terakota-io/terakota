@@ -24,7 +24,11 @@ There is **no `--config` flag**: the file is read from that path or the run is r
 and the refusal names the exact path it looked at. terakota never writes the file for
 you. Write it yourself, mode `0600`.
 
-Four sections, all optional except the ones your books need:
+Four sections. One field is **required**: `matching.missing_lag_days`, which must be at
+least `1`. Omit it — or omit the whole `matching` section — and the load refuses with
+`matching parameters out of range`, naming the file. The other three matching parameters
+may be left out (they default to `0`, which is in range), and `accounts`, `entities` and
+`sensitive_fields` are accepted empty.
 
     accounts:
       - code: "1000"
@@ -112,8 +116,19 @@ when others are on the chain.
 ## A killed run, and what a resume may claim
 
 A run that dies mid-flight leaves its row `running`, and the next reconcile of the same
-window adopts that row and its id: identical intents re-chain, the chain adopts them,
-and nothing pairs twice.
+window can adopt that row and its id — but only if `reconcile.yaml` is byte-for-byte
+what it was. The run id is derived from company, window and `config_version`, so any
+edit at all, a comment or a stray space included, produces a different id; the retry
+then finds the old row still open and is refused for a run already in flight rather than
+resuming it. Restore the original bytes to resume.
+
+Adoption covers the **link** records, not the reads. A link receipt's dedup key folds the
+run id, so a resumed run re-chains byte-identical link intents, the chain adopts them,
+and nothing pairs twice. A read pair does not work that way: every read mints a
+single-use random invocation id, so a read killed between its `read_intent` and its
+`read_result` leaves that intent permanently unpaired — a valid incomplete tail, which
+`verify-receipts` reports as exit `4` — and the retry issues a fresh vendor read and a
+fresh pair.
 
 A run that dies **after** its `matcher_run` record landed is a different case — that
 record is what says a run is finished, and it pins the input snapshot and the cut the
@@ -199,8 +214,11 @@ review state, all against local state only:
   none|human|revoked`, `--outcome`, `--from` / `--to` (the same closed spelling
   `reconcile` uses, `--to` inclusive), and `--cursor`. A filter value this shape cannot
   reach is **refused with the reason**, never answered with an empty list. With
-  `--cursor` present, every other parameter except `--intent` must be absent — the
-  continuation carries the filters its first page ran under.
+  `--cursor` present the **filter** flags must be absent — `--run-id`, `--derivation`,
+  `--confirmation`, `--outcome`, `--from`, `--to` — because the continuation carries the
+  filters its first page ran under. The selectors stay: `--company` is required on every
+  `links-list`, cursor or not, and a non-default `--home` has to ride along too or the
+  continuation opens a different store. `--intent` may accompany it.
 - `terakota links-confirm --company mybooks --link <relationship_id>` — records a human
   confirmation. It chains **one** `link_reclass` receipt and then moves the local
   projection, in that order. The receipt records the review **surface** (`human:cli`),
@@ -230,10 +248,14 @@ time out where one blocking `terakota reconcile` does not.
 - `reconcile_start` — takes `effective_from` / `effective_to` on the same closed
   posting-date spelling, returns a run id immediately and keeps running. **One run per
   company at a time**; a second start while one is live is refused as `run_in_progress`.
-- `reconcile_status` — reports one run by id: its window, its coverage, its counts by
-  verdict class, which classes that run could not reach, and the lineage of the link set
-  the verdict stands on. A run whose completion was never recorded is reported as
-  `unknown` together with its last chained evidence.
+- `reconcile_status` — reports one run by id, and it is worth knowing which half comes
+  from where. The run's identity, state and window come from the row you asked for. The
+  verdict beside it is the **window's latest** — the newest reconciliation record chained
+  for that company and window — so after a later re-run of the same window that record
+  belongs to a different run, and its cut, coverage, counts, unreachable classes and
+  lineage are that run's, not the one you named. `earlier_records_exist` says whether
+  others sit behind it. A run whose completion was never recorded is the exception: it is
+  reported as `unknown` with its last chained evidence and no verdict at all.
 - `links_list` — the same link rows `terakota links-list` prints, read from local state.
 
 `reconcile_status` and `links_list` execute no vendor call and record nothing. There is

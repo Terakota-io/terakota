@@ -127,12 +127,15 @@ rendered in `timeline.html` in plain English beside the reads it stands on.
 link result has to follow its own intent, a supersede cannot precede the link it sets
 aside, and a link chained after its run's completion record is out of order.
 
-The manifest then gains a `correlation` block: the verdict's window, the classes that
-verdict declared it could not reach, and its lineage — the `link_set_hash`, the
-derivation/confirmation mix of the links it stood on, and the
-`correlation_config_version` those links were evaluated under. It renders **one** verdict,
-the newest that stood on a link set, and `earlier_records_exist` says whether others sit
-behind it on the chain.
+The manifest gains a `correlation` block **whenever the chain carries link material** —
+a link pair, a reclass, a supersede, or a verdict that stood on a non-empty link set. A
+run that formed no links at all leaves the block off entirely (a `no_candidate` outcome
+mints no link receipt, so an empty link set has no key material to disclose). When the
+block is there it carries the verdict's window, the classes that verdict declared it
+could not reach, and its lineage — the `link_set_hash`, the derivation/confirmation mix
+of the links it stood on, and the `correlation_config_version` those links were evaluated
+under. It renders **one** verdict, the newest that stood on a link set, and
+`earlier_records_exist` says whether others sit behind it on the chain.
 
 Every pack carrying link material also carries the disclosure that rides every surface
 moving chain content off the machine: *link records carry the correlation key material
@@ -148,5 +151,11 @@ line — write down the `chain_head` from `manifest.json` when you receive a pac
 a pack produced later with a different head is a different pack. The pack's own
 `VERIFY.md` carries the full statement, including the by-hand procedure with stdlib
 tools; read it before you rely on the pack. For a reconcile verdict in the pack, a pass
-establishes that the verdict is derived from the chained reads and the link set it names
-— not that the books are right.
+establishes less than the verdict's own wording might suggest: that the record is intact
+and self-consistent — its inputs manifest still hashes to its `input_hash`, its window
+and its coverage claim agree with that manifest, and its lineage fields are well-formed
+and correctly ordered against the records around them. The verifier does not re-read the
+sources, re-run the matcher, or recompute `link_set_hash` from the link records on the
+chain, and it does not tie the inputs manifest to the `read_result` rows beside it. So a
+pass says the verdict has not been altered since it was chained — not that it was in fact
+derived from those reads, and not that the books are right.

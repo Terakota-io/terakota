@@ -93,9 +93,9 @@ service we operate and needs a free terakota account. It ships with
   been reconciled with it yet. The walkthrough is [docs/reconcile.md](docs/reconcile.md).
 - **Reconcile from an agent session, start-and-poll** *(since v1.7.0)*. The MCP server
   gains three composite tools: `reconcile_start` returns a run id and keeps running,
-  `reconcile_status` reports that run's recorded state — window, coverage, counts by
-  class, the classes it could not reach, and the lineage of the link set the verdict
-  stands on — and `links_list` reads the same link rows from local state. A synchronous
+  `reconcile_status` reports that run's identity, state and window beside the window's
+  latest verdict — which after a re-run of the same window is a later run's record, and
+  says so — and `links_list` reads the same link rows from local state. A synchronous
   reconcile over the agent transport is barred, one run per company is live at a time,
   and the two local-state reads execute no vendor call and record nothing.
 - **Per-tool help.** `terakota <tool> --help` prints that tool's own parameters,
