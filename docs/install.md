@@ -81,7 +81,10 @@ already pinned. `terakota about` shows the notice any time.
 `registry_version`. Nothing breaks: `verify-receipts` grades the chain, not the
 registry value, so a chain holding receipts from both versions still verifies. List
 cursors are unaffected: a cursor binds to its collection and cursor format, not to the
-registry, so a walk started on v1.6.0 continues on v1.7.0.
+registry, so a walk started on v1.6.0 continues on v1.7.0. Continuing a walk has its own
+rules, and the upgrade does not change them: pass `--company` — required on every
+invocation, cursor or not — and the same non-default `--home`, and pass no filter flag
+alongside `--cursor`. Only `--intent` may ride with it.
 
 One upgrade note carried from v1.6.0: starting a **new** production QuickBooks
 connection requires v1.6.0 or later, because the connect ceremony moved to a back

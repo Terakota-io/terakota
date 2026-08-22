@@ -8,7 +8,8 @@ chain, and prints one response envelope on stdout.
     terakota reconcile --company mybooks --from 2026-06-01 --to 2026-06-30 \
                        [--progress json|plain|off] [--intent "june close"] [--home <dir>]
 
-Honest tier: reconcile is verified on synthetic two-source journals; no customer's books have been reconciled with it yet.
+Honest tier: reconcile is verified on synthetic two-source journals; no customer's books
+have been reconciled with it yet.
 
 ## The window
 

@@ -33,21 +33,29 @@ against a chain head you recorded separately — so write down `chain_head` from
 `manifest.json` when you receive a pack. The pack's `VERIFY.md` states all of this
 in full.
 
-**What does `terakota reconcile` prove?** That the verdict it recorded was derived from
-reads that are on your chain — and nothing beyond that. From v1.7.0, `terakota reconcile
---company <id> --from <date> --to <date>` pulls both connected sources over a closed
-posting-date window, runs the deterministic matcher over the journal entries it finds,
-and records the links and the verdict on your local chain; every pull is an ordinary
-receipted read, so the lineage is checkable offline like any other read. It does **not**
-establish that your books are correct. Its coverage is stated rather than assumed: any
-partial leg makes the run partial and no `missing` is asserted, a failed page fails the
-whole run instead of minting a verdict off half a window, and two classes — `backdated`
-and `edited_after_rekey` — are declared **not detectable** on this shape rather than
-reported as zero, because they need persisted state that does not exist on your machine.
+**What does `terakota reconcile` prove?** Less than the word "prove" suggests. From
+v1.7.0, `terakota reconcile --company <id> --from <date> --to <date>` pulls both
+connected sources over a closed posting-date window, runs the deterministic matcher over
+the journal entries it finds, and records the links and the verdict on your local chain;
+every pull is an ordinary receipted read, so the reads it made sit on the chain beside
+the verdict. What offline verification establishes is narrower: that the verdict
+**record** is intact and self-consistent — its inputs manifest still hashes to its own
+`input_hash`, its window and its coverage claim agree with that manifest, and its lineage
+fields are well-formed and correctly ordered against their neighbours. `verify-receipts`
+does not re-read the sources, re-run the matcher, recompute the link-set hash from the
+link records, or tie the inputs manifest to the `read_result` rows beside it — so a pass
+does **not** prove the verdict was derived from those reads, and it does not establish
+that your books are correct. [verify.md](verify.md) states the same limit at length.
+
+Its coverage is stated rather than assumed: any partial leg makes the run partial and no
+`missing` is asserted, a failed page fails the whole run instead of minting a verdict off
+half a window, and two classes — `backdated` and `edited_after_rekey` — are declared
+**not detectable** on this shape rather than reported as zero, because they need
+persisted state that does not exist on your machine.
 Every correlation key reads un-attested: `derivation: key` carries no proven uniqueness.
-Reconcile is verified on synthetic two-source journals; no customer's books have been reconciled with it yet. [reconcile.md](reconcile.md)
-carries the full statement, including what a link record discloses when it leaves your
-machine.
+Reconcile is verified on synthetic two-source journals; no customer's books have been
+reconciled with it yet. [reconcile.md](reconcile.md) carries the full statement,
+including what a link record discloses when it leaves your machine.
 
 **Can an agent confirm a link?** No. `links-confirm` and `links-revoke` require an
 interactive controlling terminal and have no MCP counterpart — the server exposes no
@@ -64,8 +72,12 @@ and `registry_version` is a hash over the whole table — so it rehashes as a wh
 `52c6473b294269cfc5b9aab6fd68254cab78795e32e53ffe0277b84909340422`, with the registry
 growing from 39 to 42 tools. Receipts minted by v1.7.0 carry the new value. It is not a
 break — `verify-receipts` grades the chain, not the registry value, so a chain holding
-receipts from both versions still verifies. List cursors are unaffected: a cursor binds to its collection and cursor
-format, not to the registry, so a walk started on v1.6.0 continues on v1.7.0.
+receipts from both versions still verifies. List cursors are unaffected: a cursor binds
+to its collection and cursor format, not to the registry, so a walk started on v1.6.0
+continues on v1.7.0. Continuing a walk has its own rules, and the upgrade does not change
+them: pass `--company` — required on every invocation, cursor or not — and the same
+non-default `--home`, and pass no filter flag alongside `--cursor`. Only `--intent` may
+ride with it.
 
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
 none, not even optional ones, in any version. The only calls it makes to a service

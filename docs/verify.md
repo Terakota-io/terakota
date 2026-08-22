@@ -134,8 +134,15 @@ mints no link receipt, so an empty link set has no key material to disclose). Wh
 block is there it carries the verdict's window, the classes that verdict declared it
 could not reach, and its lineage — the `link_set_hash`, the derivation/confirmation mix
 of the links it stood on, and the `correlation_config_version` those links were evaluated
-under. It renders **one** verdict, the newest that stood on a link set, and
-`earlier_records_exist` says whether others sit behind it on the chain.
+under. It renders **one** verdict — the newest reconciliation on the chain whose lineage
+this build can read. A run that formed no links is part of that choice rather than skipped
+over: its `link_set_hash` is the hash over the empty set, a real value and not an absent
+field, so a later link-less run is still the one rendered. `earlier_records_exist` says
+whether other verdicts sit behind the one shown. And if a reconciliation *newer* than the
+rendered one cannot be read — its body shape is unreadable to this build, or it carries no
+lineage at all — the block renders no verdict and says so in `newer_verdict_not_rendered`,
+pointing you at the newest body in `receipts.jsonl`. An older verdict is never presented
+as the current one.
 
 Every pack carrying link material also carries the disclosure that rides every surface
 moving chain content off the machine: *link records carry the correlation key material
