@@ -89,9 +89,8 @@ service we operate and needs a free terakota account. It ships with
   they need persisted state that does not exist locally. Read this before sharing
   anything: link records carry the correlation key material that formed them — for
   exact-dimension links that includes the entry's date, amount and account set.
-  Reconcile is verified on synthetic two-source journals and on a read-only live
-  AppFolio rail; no customer's books have been reconciled with it yet. The walkthrough
-  is [docs/reconcile.md](docs/reconcile.md).
+  Reconcile is verified on synthetic two-source journals; no customer's books have
+  been reconciled with it yet. The walkthrough is [docs/reconcile.md](docs/reconcile.md).
 - **Reconcile from an agent session, start-and-poll** *(since v1.7.0)*. The MCP server
   gains three composite tools: `reconcile_start` returns a run id and keeps running,
   `reconcile_status` reports that run's recorded state — window, coverage, counts by
