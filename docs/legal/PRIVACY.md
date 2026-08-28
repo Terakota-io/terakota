@@ -172,24 +172,35 @@ trace, or metric — including at the hosting edge.
 **Retention and deletion.** Account data lives for the life of the account.
 There is no self-serve close button: write to contact@bilans.io — the contact
 address on the portal — and an operator runs the offboarding sequence. That
-sequence cuts your access, then removes the account record, the
-Auth0 user, live connection records, and any flight rows. Records of connections
-that have been **revoked** are kept for 90 days after revocation — that window
-is what makes abuse attribution on our shared Intuit application possible — and
-are then erased. Revoking the grant at Intuit itself is a separate step, and it
-is one we perform on request: running `terakota qbo disconnect --company <id>`
-asks the broker to revoke with Intuit, and removing the app in your Intuit
-account stays available to you at any time. Closing the account does not fire
-that upstream revocation on its own; it stops renewals, which ends the
-connection within one access-token lifetime. The audit log is append-only for
-integrity: rather than deleting rows, we replace the identifiers in them with a
-tombstone, keeping the event and dropping the person. Audit entries are retained
-for 365 days. Deletions reach the next operator backup rotation; for an erasure
-request we force a fresh backup rather than waiting. Backups taken before an
-erasure can retain copies of the erased records until they age out of rotation
-and are destroyed; backups are held by the operator alone and are never used to
-serve traffic, and if a backup is ever restored, the erasure is re-run against
-the restored data.
+sequence cuts your access first — your workspace memberships and active
+sessions go — and the same day your identifying data goes with it: your Auth0
+user and your sign-in identity are deleted, and on the account record itself
+your email address, display name, accepted-terms record and verified-email
+flag are cleared and the connect entitlement is withdrawn. What is left that
+day is a de-identified record that cannot be signed in to and cannot be
+granted access or a connect entitlement again. Records of connections that
+have been **revoked** are kept for 90 days after revocation — that window is
+what makes abuse attribution on our shared Intuit application possible — and
+are then erased, together with the spent flight rows of those connections. The
+de-identified account record is removed after that, in a second step: those
+retained records reference it, and it cannot be removed while they do, which
+makes the 90-day window a floor on its removal rather than a target. We
+compute the date it becomes removable when we act on your request, and give
+you that date in our response. Revoking the grant at Intuit itself is a
+separate step, and it is one we perform on request: running
+`terakota qbo disconnect --company <id>` asks the broker to revoke with
+Intuit, and removing the app in your Intuit account stays available to you at
+any time. Closing the account does not fire that upstream revocation on its
+own; it stops renewals, which ends the connection within one access-token
+lifetime. The audit log is append-only for integrity: rather than deleting
+rows, we replace the identifiers in them with a tombstone, keeping the event
+and dropping the person. Audit entries are retained for 365 days. Deletions
+reach the next operator backup rotation; for an erasure request we force a
+fresh backup rather than waiting. Backups taken before an erasure can retain
+copies of the erased records until they age out of rotation and are destroyed;
+backups are held by the operator alone and are never used to serve traffic,
+and if a backup is ever restored, the erasure is re-run against the restored
+data.
 
 **Who else touches this surface.** Fly.io hosts the broker, the portal, and the
 Postgres control store (US, iad). Auth0/Okta handles identity. Cloudflare
@@ -238,15 +249,38 @@ covers how we handle and disclose incidents on that surface.
 We honor privacy rights available to you under applicable law (access,
 correction, deletion, portability, and others where they apply). What we hold
 about you is short: correspondence, and — if you have connected production
-QuickBooks through our connect service — your account and its connection records
-as listed in Section 3a. Many requests will still find nothing retained, but
-every request gets a real answer: write to contact@bilans.io and we will
-verify, respond within the timeline applicable law sets (default: 30 days), and
-explain any denial. Erasure reaches the account record, the Auth0 user,
-connection records, and flight rows; the append-only audit log is tombstoned
-rather than rewritten, as Section 3a describes.
+QuickBooks through our connect service — your account and its connection
+records as listed in Section 3a. Many requests will still find nothing
+retained, but every request gets a real answer: write to contact@bilans.io and
+we will verify, respond within the timeline applicable law sets (default: 30
+days), and explain any denial. Erasure runs in two steps. The day we act on
+your verified request your identifying data goes — your Auth0 user, your
+sign-in identity, your sessions and memberships, and, on the account record,
+your email address, display name, accepted-terms record and verified-email
+flag — leaving a de-identified record that cannot be signed in to and cannot
+be granted access again. The record itself is removed in a second step, after
+the 90-day window for revoked connection records in Section 3a has closed and
+those records and their spent flight rows have been erased: they reference the
+record, and it cannot be removed while they do, so that step falls after the
+response deadline rather than inside it. We give you the date it becomes
+removable in our response; the append-only audit log is tombstoned rather than
+rewritten, as Section 3a describes.
 
 [Change log:
+Revision 2026-08-28 (terms-pack v1.2) — the published erasure wording now
+matches what erasure does. Closure and an erasure request complete in two
+steps, not one: the day we act on a verified request the identifying data goes
+(the Auth0 user, the sign-in identity, sessions and memberships, and the email
+address, display name, accepted-terms record and verified-email flag on the
+account record), and the account record itself is removed only after the
+90-day window for revoked connection records has closed, because those
+retained records reference it and it cannot be removed while they do. Section
+3a now states both steps, the de-identified state between them, and that we
+give you the date the record becomes removable; Section 6 separates the
+response deadline (default: 30 days), which is unchanged, from the removal of
+the record, which falls after it. This corrects a description, not a practice:
+no new data category, no new retention, and the 90-day and 365-day windows are
+unchanged.
 Revision 2026-08-17 (terms-pack v1.2) — item 9 of the connection-record
 enumeration now names the revocation timestamp (`revoked_at`) beside the
 created and last-refresh timestamps; the field was added so the 90-day
