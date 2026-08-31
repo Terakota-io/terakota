@@ -13,8 +13,7 @@ The short version, split by what you connect:
 
 This notice describes every place our infrastructure can observe anything at
 all: downloads, the connect service (the broker at `oauth.terakota.io` and the
-portal at `app.terakota.io`), the website, and correspondence you send us — plus
-Seam Check at `check.terakota.io`, which the portal privacy notice covers.
+portal at `app.terakota.io`), the website, and correspondence you send us.
 
 ## 1. The software: what it sends, and to whom
 
@@ -96,9 +95,6 @@ Ashburn, Virginia):
   `https://app.terakota.io/privacy` covers the portal in full, and — from its
   next revision, published with this one — says the same things this notice
   says.
-
-`check.terakota.io` (Seam Check, the free one-shot reconciliation) is covered by
-the portal privacy notice, not here.
 
 ## 3a. The terakota account (production QuickBooks connections)
 
@@ -267,6 +263,15 @@ removable in our response; the append-only audit log is tombstoned rather than
 rewritten, as Section 3a describes.
 
 [Change log:
+Revision 2026-08-31 (terms-pack v1.2) — Seam Check at `check.terakota.io` is
+retired, and the two places this notice pointed at it go with it: the lede no
+longer names it in the surfaces this notice covers, and Section 3 drops the
+carve-out sending you to the portal privacy notice for it. Neither place ever
+described processing of ours — both only said where to look — so this removes
+a pointer, not a disclosure: no data category changes, no retention window
+changes, and no surface we still run loses its description. The surfaces this
+notice covers are now downloads, the connect service, the website, and
+correspondence.
 Revision 2026-08-28 (terms-pack v1.2) — the published erasure wording now
 matches what erasure does. Closure and an erasure request complete in two
 steps, not one: the day we act on a verified request the identifying data goes
