@@ -409,22 +409,24 @@ We honor privacy rights available to you under applicable law (access,
 correction, deletion, portability, and others where they apply). What we hold
 about you is short: correspondence, and — if you hold a terakota account — the
 account, any connection records, the control-plane audit rows your actions
-produced, and the 90-day read log of your control-plane reads, as listed in
-Section 3a. Many requests will still find nothing retained, but every request
-gets a real answer: write to contact@bilans.io and we will verify, respond
-within the timeline applicable law sets (default: 30 days), and explain any
-denial. Erasure runs in two steps. The day we act on your verified request
-your identifying data goes — your Auth0 user, your sign-in identity, your
-sessions and memberships, and, on the account record, your email address,
-display name, accepted-terms record and verified-email flag — leaving a
-de-identified record that cannot be signed in to and cannot be granted access
-again. The record itself is removed in a second step, after the 90-day window
-for revoked connection records in Section 3a has closed and those records and
-their spent flight rows have been erased: they reference the record, and it
-cannot be removed while they do, so that step falls after the response
-deadline rather than inside it. We give you the date it becomes removable in
-our response; the append-only audit log is tombstoned rather than rewritten,
-as Section 3a describes.
+produced, the 90-day read log of your control-plane reads, and the request
+lines of our application log, as listed in Section 3a (those lines are not
+edited — they expire with our host's log retention, closure or not). Many
+requests will still find nothing retained, but every request gets a real
+answer: write to contact@bilans.io and we will verify, respond within the
+timeline applicable law sets (default: 30 days), and explain any denial.
+Erasure runs in two steps. The day we act on your verified request your
+identifying data goes — your Auth0 user, your sign-in identity, your sessions
+and memberships, and, on the account record, your email address, display name,
+accepted-terms record and verified-email flag — leaving a de-identified record
+that cannot be signed in to and cannot be granted access again. The record
+itself is removed in a second step, after the 90-day window for revoked
+connection records in Section 3a has closed and those records and their spent
+flight rows have been erased: they reference the record, and it cannot be
+removed while they do, so that step falls after the response deadline rather
+than inside it. We give you the date it becomes removable in our response; the
+append-only audit log is tombstoned rather than rewritten, as Section 3a
+describes.
 
 [Change log:
 v1.3 — the account gains a second purpose, our control panel, and the
