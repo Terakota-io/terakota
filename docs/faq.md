@@ -80,13 +80,17 @@ non-default `--home`, and pass no filter flag alongside `--cursor`. Only `--inte
 ride with it.
 
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
-none, not even optional ones, in any version. The only calls it makes to a service
-of ours belong to a production QuickBooks connection made through our connect
-service (from v1.4.0): the authorization and the revocation you ask for, plus the
-token renewal, which runs on its own whenever the access token nears expiry
-(roughly hourly in active use). With no production QuickBooks connection it
-contacts no host of ours at all, and its network connections are to the systems
-you point it at (AppFolio, Intuit, Dialpad), using your credentials.
+none, not even optional ones, in any version. It calls a service of ours in two
+cases only. The first is a production QuickBooks connection made through our
+connect service (from v1.4.0): the authorization and the revocation you ask for,
+plus the token renewal, which runs on its own whenever the access token nears
+expiry (roughly hourly in active use). The second is optional and exists from
+v1.8.0: `terakota login` signs the binary in through our sign-in host, and after
+you link a company with `terakota link` the `platform-*` commands and
+`events-tail` read our control plane — each call started by you. With no
+production QuickBooks connection and no `terakota login` it contacts no host of
+ours at all, and its network connections are to the systems you point it at
+(AppFolio, Intuit, Dialpad), using your credentials.
 
 **What data can you (the makers) see?** None of your business data, in any mode.
 Your AppFolio and Dialpad credentials, your queries, your results, and your receipt
