@@ -214,15 +214,23 @@ hold no copy, and no interface of ours can reach them.
 
 For AppFolio, Dialpad, local reconciliation, `verify-receipts`, and QuickBooks against an
 Intuit sandbox company under your own registered Intuit application, that is the whole
-story: nothing transmitted to us, no service of ours in the path, no account to create.
+story unless you choose to sign in: nothing transmitted to us, no service of ours in the
+path, no account to create.
 
-Connecting a **production** QuickBooks company (from v1.4.0) is the one exception. It runs
+Connecting a **production** QuickBooks company (from v1.4.0) is the first exception. It runs
 through our hosted connect service and needs a free terakota account, and we then hold that
 account plus an eleven-field connection record — metadata only, never your QuickBooks data,
 and no token we could read at rest. The reads themselves still run from your machine to
 Intuit directly; the connect service carries authorization, renewal, and revocation, and
 never a vendor data call. Renewal runs on its own, roughly hourly while you work. With no
-production QuickBooks connection, terakota contacts no host of ours at all.
+production QuickBooks connection and no `terakota login`, terakota contacts no host of ours
+at all.
+
+From v1.8.0, `terakota login` and `terakota link` (both optional) are the second: they let
+the binary read the delivery routing of a hosted Terakota tenant you belong to — and, from
+the release that ships those commands, change it — through our control plane. What moves
+there is our own delivery metadata, never your data, and every call is started by you; the
+EULA §4 lists each command. Without `login`, nothing above changes.
 
 Full notice: **[docs/legal/PRIVACY.md](docs/legal/PRIVACY.md)** ·
 **https://terakota.io/privacy**
