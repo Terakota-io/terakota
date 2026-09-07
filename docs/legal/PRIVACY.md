@@ -81,13 +81,14 @@ three classes:
      record these calls on our side (Section 3a): a read or a tail poll
      leaves one line — your account, the tenant, which command, the time —
      in a log we delete after 90 days (if that line cannot be written, the
-     read still completes and our server log records the failure with the
-     same fields); a change leaves one permanent line in the routing audit;
-     `account` leaves nothing. The reads and the tail record nothing on your
-     receipt chain, and the four change commands are receipted on the linked
-     company's chain from the release that ships them. What each call
-     carries is stated in Section 3a, together with what we record about it
-     and for how long.
+     read still completes and the failure is noted in our application log —
+     the tenant, the command and the error, never your account id); a change
+     leaves one permanent line in the routing audit; `account` leaves
+     nothing. The reads and the tail record nothing on your receipt chain,
+     and the four change commands are receipted on the linked company's
+     chain from the release that ships them. What each call carries is
+     stated in Section 3a, together with what we record about it and for how
+     long.
 
 AppFolio, Dialpad, local reconciliation, receipts, `verify-receipts`, and an
 Intuit sandbox company under your own registered Intuit application need no
@@ -264,21 +265,23 @@ separately and more briefly: one line in a read log in our control store —
 your account id, the tenant, which read, and the time, with no inputs and no
 results — and nothing at all for the command that only asks who you are
 signed in as. If a read's line cannot be written, the read still completes
-and our server log records the failure with the same fields. While a tail
-runs that is one line every few seconds, which is a record of when your
-machine was polling. We delete read-log lines older than 90 days, and
-closing your account deletes yours in the same step that clears your email
-and display name. The change rows above are different: they are append-only
-and have no automatic expiry today. For each event delivered on a tenant's
-hosted spine we also keep one index row — its sequence, topic, entity id,
-event id, the delivery's message id, and when it was received and delivered;
-the table has no payload column, so it cannot hold an event's content, and
-rows older than 90 days are removed on the operator's retention run. Neither
-the panel nor the binary can see an ingest token, a quarantined delivery's
-body or signature, a dead letter's payload, or a destination's address or
-secret; dead-letter error text is shown with addresses masked. Other members
-of the same tenant can see, on the panel's audit view, that a member account
-made a change — the action, the time and the digest, not which account.
+and the failure is noted in our application log — the tenant, the command
+and the error, never your account id; that log lives on our host for a
+bounded period and holds no identifier of yours. While a tail runs that is
+one line every few seconds, which is a record of when your machine was
+polling. We delete read-log lines older than 90 days, and closing your
+account deletes yours in the same step that clears your email and display
+name. The change rows above are different: they are append-only and have no
+automatic expiry today. For each event delivered on a tenant's hosted spine
+we also keep one index row — its sequence, topic, entity id, event id, the
+delivery's message id, and when it was received and delivered; the table has
+no payload column, so it cannot hold an event's content, and rows older than
+90 days are removed on the operator's retention run. Neither the panel nor
+the binary can see an ingest token, a quarantined delivery's body or
+signature, a dead letter's payload, or a destination's address or secret;
+dead-letter error text is shown with addresses masked. Other members of the
+same tenant can see, on the panel's audit view, that a member account made a
+change — the action, the time and the digest, not which account.
 
 **Sign-in tokens on your machine (from terakota `v1.8.0`).**
 `terakota login` leaves two tokens on your machine and nowhere of ours: a
@@ -309,38 +312,38 @@ counts. No URL queries, no request or response bodies, no authorization codes,
 no tokens, no state values, no capsules, and no realm ids appear in any log,
 trace, or metric — including at the hosting edge.
 
-**Retention and deletion.** Account data lives for the life of the account.
-There is no self-serve close button: write to contact@bilans.io — the contact
-address on the portal — and an operator runs the offboarding sequence. That
-sequence cuts your access first — your workspace memberships and active
-sessions go — and the same day your identifying data goes with it: your Auth0
-user and your sign-in identity are deleted, and on the account record itself
-your email address, display name, accepted-terms record and verified-email
-flag are cleared and the connect and control-panel entitlements are withdrawn.
-What is left that day is a de-identified record that cannot be signed in to and
-cannot be granted access or a connect entitlement again. Records of connections that
-have been **revoked** are kept for 90 days after revocation — that window is
-what makes abuse attribution on our shared Intuit application possible — and
-are then erased, together with the spent flight rows of those connections. The
-de-identified account record is removed after that, in a second step: those
-retained records reference it, and it cannot be removed while they do, which
-makes the 90-day window a floor on its removal rather than a target. We
-compute the date it becomes removable when we act on your request, and give
-you that date in our response. Revoking the grant at Intuit itself is a
-separate step, and it is one we perform on request: running
-`terakota qbo disconnect --company <id>` asks the broker to revoke with
-Intuit, and removing the app in your Intuit account stays available to you at
-any time. Closing the account does not fire that upstream revocation on its
-own; it stops renewals, which ends the connection within one access-token
-lifetime. The audit log is append-only for integrity: rather than deleting
-rows, we replace the identifiers in them with a tombstone, keeping the event
-and dropping the person. Audit entries are retained for 365 days. Deletions
-reach the next operator backup rotation; for an erasure request we force a
-fresh backup rather than waiting. Backups taken before an erasure can retain
-copies of the erased records until they age out of rotation and are destroyed;
-backups are held by the operator alone and are never used to serve traffic,
-and if a backup is ever restored, the erasure is re-run against the restored
-data.
+**Retention and deletion.** Account data lives for the life of the account. There is
+no self-serve close button: write to contact@bilans.io — the contact address on the
+portal — and an operator runs the offboarding sequence. That sequence cuts your
+access first — your workspace memberships and active sessions go, and a
+control-plane access token already issued to the binary opens nothing from that
+moment, because every control-plane call checks your membership live (it stays a
+valid token until it expires, within an hour) — and the same day your identifying
+data goes with it: your Auth0 user and your sign-in identity are deleted, and on the
+account record itself your email address, display name, accepted-terms record and
+verified-email flag are cleared and the connect and control-panel entitlements are
+withdrawn. What is left that day is a de-identified record that cannot be signed in
+to and cannot be granted access or a connect entitlement again. Records of
+connections that have been **revoked** are kept for 90 days after revocation — that
+window is what makes abuse attribution on our shared Intuit application possible —
+and are then erased, together with the spent flight rows of those connections. The
+de-identified account record is removed after that, in a second step: those retained
+records reference it, and it cannot be removed while they do, which makes the 90-day
+window a floor on its removal rather than a target. We compute the date it becomes
+removable when we act on your request, and give you that date in our response.
+Revoking the grant at Intuit itself is a separate step, and it is one we perform on
+request: running `terakota qbo disconnect --company <id>` asks the broker to revoke
+with Intuit, and removing the app in your Intuit account stays available to you at
+any time. Closing the account does not fire that upstream revocation on its own; it
+stops renewals, which ends the connection within one access-token lifetime. The
+audit log is append-only for integrity: rather than deleting rows, we replace the
+identifiers in them with a tombstone, keeping the event and dropping the person.
+Audit entries are retained for 365 days. Deletions reach the next operator backup
+rotation; for an erasure request we force a fresh backup rather than waiting.
+Backups taken before an erasure can retain copies of the erased records until they
+age out of rotation and are destroyed; backups are held by the operator alone and
+are never used to serve traffic, and if a backup is ever restored, the erasure is
+re-run against the restored data.
 
 The control-plane audit rows described above live in our engine store and
 are append-only; they carry your account id, not your email, and closure
@@ -400,25 +403,25 @@ covers how we handle and disclose incidents on that surface.
 ## 6. Your rights, changes & contact
 
 We honor privacy rights available to you under applicable law (access,
-correction, deletion, portability, and others where they apply). What we
-hold about you is short: correspondence, and — if you hold a terakota
-account — the account, any connection records, and the control-plane audit
-rows your actions produced, as listed in Section 3a. Many requests will
-still find nothing
-retained, but every request gets a real answer: write to contact@bilans.io and
-we will verify, respond within the timeline applicable law sets (default: 30
-days), and explain any denial. Erasure runs in two steps. The day we act on
-your verified request your identifying data goes — your Auth0 user, your
-sign-in identity, your sessions and memberships, and, on the account record,
-your email address, display name, accepted-terms record and verified-email
-flag — leaving a de-identified record that cannot be signed in to and cannot
-be granted access again. The record itself is removed in a second step, after
-the 90-day window for revoked connection records in Section 3a has closed and
-those records and their spent flight rows have been erased: they reference the
-record, and it cannot be removed while they do, so that step falls after the
-response deadline rather than inside it. We give you the date it becomes
-removable in our response; the append-only audit log is tombstoned rather than
-rewritten, as Section 3a describes.
+correction, deletion, portability, and others where they apply). What we hold
+about you is short: correspondence, and — if you hold a terakota account — the
+account, any connection records, the control-plane audit rows your actions
+produced, and the 90-day read log of your control-plane reads, as listed in
+Section 3a. Many requests will still find nothing retained, but every request
+gets a real answer: write to contact@bilans.io and we will verify, respond
+within the timeline applicable law sets (default: 30 days), and explain any
+denial. Erasure runs in two steps. The day we act on your verified request
+your identifying data goes — your Auth0 user, your sign-in identity, your
+sessions and memberships, and, on the account record, your email address,
+display name, accepted-terms record and verified-email flag — leaving a
+de-identified record that cannot be signed in to and cannot be granted access
+again. The record itself is removed in a second step, after the 90-day window
+for revoked connection records in Section 3a has closed and those records and
+their spent flight rows have been erased: they reference the record, and it
+cannot be removed while they do, so that step falls after the response
+deadline rather than inside it. We give you the date it becomes removable in
+our response; the append-only audit log is tombstoned rather than rewritten,
+as Section 3a describes.
 
 [Change log:
 v1.3 — the account gains a second purpose, our control panel, and the

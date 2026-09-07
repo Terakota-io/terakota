@@ -110,11 +110,12 @@ How much of us is in the path depends on what you connect:
   be reached, the tokens are still deleted here and the refresh token
   instead runs out on the host's own clock — and an access token already
   issued stays valid until it expires, within an hour (Section 4 item 3).
-  **If you never run `terakota login`, nothing changes:** the same commands
-  behave the same way, receipts on them are identical except for the version
-  stamp, and the Software opens no connection to any host of ours beyond
-  Section 4 item 2. A refusal for being signed out or unlinked tells you
-  which command clears it and never asks you to create an account.
+  **If you never run `terakota login`, nothing changes for the commands you
+  already use:** they behave the same way, their receipts are identical
+  except for the version stamp, and the Software opens no connection to any
+  host of ours beyond Section 4 item 2; the control-plane commands refuse
+  locally, and a refusal for being signed out or unlinked tells you which
+  command clears it and never asks you to create an account.
 
 What is true in every one of those modes: no business data, no query, no
 query result, and no AppFolio or Dialpad credential ever reaches us, and no
@@ -271,12 +272,12 @@ for us by the sign-in provider item 3 names — and nothing else:
      record these calls on our side (Privacy Notice §3a): a read or a tail
      poll leaves one line — your account, the tenant, which command, the
      time — in a log we delete after 90 days (if that line cannot be
-     written, the read still completes and our server log records the
-     failure with the same fields); a change leaves one permanent line in
-     the routing audit; `account` leaves nothing. The reads and the tail
-     record nothing on your receipt chain, and the four change commands are
-     receipted on the linked company's chain from the release that ships
-     them.
+     written, the read still completes and the failure is noted in our
+     application log — the tenant, the command and the error, never your
+     account id); a change leaves one permanent line in the routing audit;
+     `account` leaves nothing. The reads and the tail record nothing on your
+     receipt chain, and the four change commands are receipted on the linked
+     company's chain from the release that ships them.
 
 If you have no production connection through our connect service and have
 not signed in with `terakota login`, the Software makes no call to any host
