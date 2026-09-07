@@ -52,10 +52,12 @@ connection flow, this agreement and the Privacy Notice would be updated
 first — version 1.1, published before v1.4.0 shipped, was that update. Read
 every statement about production QuickBooks as describing v1.4.0 and later.
 Signing in (`terakota login`), linking a company to a hosted tenant
-(`terakota link`), and the control-plane commands in Section 4 item 3 exist
-**from terakota `v1.8.0` onward**; earlier releases have none of them and
+(`terakota link`), and the control-plane commands in Section 4 item 3 appear
+**no earlier than terakota `v1.8.0`**; earlier releases have none of them and
 make none of those calls. A release may carry fewer of those commands than
-Section 4 lists; it never carries a call Section 4 does not.
+Section 4 lists — `v1.8.0` carries the sign-in, the link, the reads and the
+tail, and not the four change commands — and it never carries a call
+Section 4 does not.
 
 How much of us is in the path depends on what you connect:
 
@@ -103,8 +105,10 @@ How much of us is in the path depends on what you connect:
   and the command's own inputs; it never sends a vendor credential, a query,
   a result, a receipt, or your local company id, and nothing you type as
   `--intent` leaves your machine. `terakota unlink` removes the link and
-  contacts nothing; `terakota logout` revokes the sign-in and deletes the
-  tokens from your machine. **If you never run `terakota login`, nothing
+  contacts nothing; `terakota logout` asks our sign-in host to revoke the
+  refresh token and deletes both tokens from your machine — an access token
+  already issued stays valid until it expires, within an hour (Section 4
+  item 3). **If you never run `terakota login`, nothing
   changes:** the same commands behave the same way, receipts on them are
   identical except for the version stamp, and the Software opens no
   connection to any host of ours beyond Section 4 item 2. A refusal for
@@ -341,7 +345,9 @@ contents are unaffected by this agreement.
 
 Ending this agreement does not by itself close your terakota account or
 delete its connection records, and neither does `terakota logout` — that
-revokes the sign-in and deletes the tokens from your machine, nothing more.
+asks our sign-in host to revoke the refresh token and deletes both tokens
+from your machine, nothing more (an access token already issued expires
+within an hour).
 If you hold an account, write to contact@bilans.io to close it and an
 operator runs the offboarding sequence in the Portal Account Terms. There is
 no self-serve close button. Privacy Notice §3a states what is held, what the

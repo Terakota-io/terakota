@@ -12,8 +12,8 @@ The short version, split by what you connect:
   account.
 - **Our control panel, if you choose to sign in and link (from terakota
   `v1.8.0`):** `terakota login` and `terakota link` are optional; once
-  linked, the `platform-*` commands and `events-tail` call our control plane
-  and we record each call. They carry our own delivery metadata for the
+  linked, the `platform-*` commands (in `v1.8.0`, the six reads) and
+  `events-tail` call our control plane and we record each call. They carry our own delivery metadata for the
   tenant you linked — never your data.
 
 This notice describes every place our infrastructure can observe anything at

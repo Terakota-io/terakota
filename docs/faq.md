@@ -86,7 +86,7 @@ connect service (from v1.4.0): the authorization and the revocation you ask for,
 plus the token renewal, which runs on its own whenever the access token nears
 expiry (roughly hourly in active use). The second is optional and exists from
 v1.8.0: `terakota login` signs the binary in through our sign-in host, and after
-you link a company with `terakota link` the `platform-*` commands and
+you link a company with `terakota link` the `platform-*` read commands and
 `events-tail` read our control plane — each call started by you. With no
 production QuickBooks connection and no `terakota login` it contacts no host of
 ours at all, and its network connections are to the systems you point it at
