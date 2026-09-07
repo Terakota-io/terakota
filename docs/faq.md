@@ -108,6 +108,12 @@ sandbox QuickBooks under your own registered Intuit application need no account 
 put no service of ours in the path. The full field list is in
 [PRIVACY.md](legal/PRIVACY.md) §3a.
 
+If you sign in with `terakota login` and link a company (from v1.8.0), we hold two
+more things, both described in Privacy §3a and neither of them your data: a read-log
+line for each control-plane read or `events-tail` poll — your account id, the tenant,
+which read, the time; deleted after 90 days — and, for each routing change made in
+the browser panel, one append-only audit row in our engine store.
+
 **Can it change my books?** No. The binaries contain no code paths that write to
 the connected systems — read-only is a structural property of the shipped client,
 asserted by automated checks at build time. One caution: the QuickBooks OAuth
