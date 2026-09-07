@@ -80,13 +80,17 @@ non-default `--home`, and pass no filter flag alongside `--cursor`. Only `--inte
 ride with it.
 
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
-none, not even optional ones, in any version. The only calls it makes to a service
-of ours belong to a production QuickBooks connection made through our connect
-service (from v1.4.0): the authorization and the revocation you ask for, plus the
-token renewal, which runs on its own whenever the access token nears expiry
-(roughly hourly in active use). With no production QuickBooks connection it
-contacts no host of ours at all, and its network connections are to the systems
-you point it at (AppFolio, Intuit, Dialpad), using your credentials.
+none, not even optional ones, in any version. It calls a service of ours in two
+cases only. The first is a production QuickBooks connection made through our
+connect service (from v1.4.0): the authorization and the revocation you ask for,
+plus the token renewal, which runs on its own whenever the access token nears
+expiry (roughly hourly in active use). The second is optional and exists from
+v1.8.0: `terakota login` signs the binary in through our sign-in host, and after
+you link a company with `terakota link` the `platform-*` read commands and
+`events-tail` read our control plane — each call started by you. With no
+production QuickBooks connection and no `terakota login` it contacts no host of
+ours at all, and its network connections are to the systems you point it at
+(AppFolio, Intuit, Dialpad), using your credentials.
 
 **What data can you (the makers) see?** None of your business data, in any mode.
 Your AppFolio and Dialpad credentials, your queries, your results, and your receipt
@@ -103,6 +107,12 @@ on our side. AppFolio, Dialpad, local reconciliation, `verify-receipts`, and
 sandbox QuickBooks under your own registered Intuit application need no account and
 put no service of ours in the path. The full field list is in
 [PRIVACY.md](legal/PRIVACY.md) §3a.
+
+If you sign in with `terakota login` and link a company (from v1.8.0), we hold two
+more things, both described in Privacy §3a and neither of them your data: a read-log
+line for each control-plane read or `events-tail` poll — your account id, the tenant,
+which read, the time; deleted after 90 days — and, for each routing change made in
+the browser panel, one append-only audit row in our engine store.
 
 **Can it change my books?** No. The binaries contain no code paths that write to
 the connected systems — read-only is a structural property of the shipped client,

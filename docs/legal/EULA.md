@@ -1,14 +1,17 @@
 # terakota End User License Agreement and Terms of Use
 
-Version 1.2 — Effective 2026-08-13
+Version 1.3 — Effective 2026-09-07
 
 This agreement is between you (the individual or entity using the Software) and
 Bilans Solutions LLC, a Wyoming limited liability company ("we", "us"). It
 governs the `terakota` and `verify-receipts` binaries and accompanying
-documentation (the "Software"). If you connect production QuickBooks Online
-through our hosted connect service, the Portal Account Terms at
-`https://app.terakota.io/terms` also govern your terakota account and that
-service — Section 9 explains which document controls what.
+documentation (the "Software"). If you hold a terakota account — because you
+connected production QuickBooks Online through our hosted connect service,
+or because you signed in with `terakota login` to use our control panel
+(from terakota `v1.8.0`) — the Portal Account Terms at
+`https://app.terakota.io/terms` also govern that account, the connect
+service, and the control panel; Section 9 explains which document controls
+what.
 
 **BY DOWNLOADING, INSTALLING, OR USING THE SOFTWARE, YOU AGREE TO THIS AGREEMENT.
 IF YOU DO NOT AGREE, DO NOT USE THE SOFTWARE.** If you use the Software on behalf
@@ -48,12 +51,22 @@ this agreement promised that if a release added a service of ours to the
 connection flow, this agreement and the Privacy Notice would be updated
 first — version 1.1, published before v1.4.0 shipped, was that update. Read
 every statement about production QuickBooks as describing v1.4.0 and later.
+Signing in (`terakota login`), linking a company to a hosted tenant
+(`terakota link`), and the control-plane commands in Section 4 item 3 appear
+**no earlier than terakota `v1.8.0`**; earlier releases have none of them and
+make none of those calls. A release may carry fewer of those commands than
+Section 4 lists — `v1.8.0` carries the sign-in, the link, the reads and the
+tail, and not the four change commands — and it never carries a call
+Section 4 does not.
 
 How much of us is in the path depends on what you connect:
 
 - **AppFolio, local reconciliation, receipts, and `verify-receipts`.** No
-  account with us, no service of ours in the path, nothing transmitted to us.
-  Reads run from your machine to the vendor directly, with your credentials.
+  account with us, no service of ours in the path, nothing transmitted to
+  us. Reads run from your machine to the vendor directly, with your
+  credentials. That stays true if you later sign in and link a company to a
+  hosted tenant: the link adds the control-plane commands below, and changes
+  nothing about how an AppFolio read runs or what it sends.
 - **Dialpad, with an API key you supply (BYO).** No account with us, no
   service of ours in the path, nothing transmitted to us. Reads run from your
   machine to Dialpad directly with your own key, and each one is receipted
@@ -75,14 +88,42 @@ How much of us is in the path depends on what you connect:
   `oauth.terakota.io`, under **our** registered Intuit application. The
   authorization code and the token material **transit** that broker. They are
   never stored there.
+- **Our control panel, if you sign in and link (from terakota `v1.8.0`) —
+  optional, and separate from everything above.** Terakota also runs a
+  hosted delivery spine for tenants we onboard. If you are a member of such
+  a tenant, `terakota login` signs this binary in to your terakota account
+  (through our sign-in provider, in your browser — the Software never
+  creates an account on its own), and `terakota link` binds one local
+  company to one hosted tenant after a live check that you are a member.
+  From then on the `platform-*` commands and `events-tail` read — and, from
+  the release that ships them, the four `platform-` change commands alter —
+  **our own delivery metadata for that tenant**: which topics exist, which
+  subscriptions route them and to which named destination, queue counts,
+  held and dead-lettered deliveries (never their content), and an index of
+  delivered events (sequence, topic, entity id, event id, times — the index
+  has no payload column). A call sends us the linked tenant, the command,
+  and the command's own inputs; it never sends a vendor credential, a query,
+  a result, a receipt, or your local company id, and nothing you type as
+  `--intent` leaves your machine. `terakota unlink` removes the link and
+  contacts nothing; `terakota logout` deletes both tokens from your machine
+  and asks our sign-in host to revoke the refresh token; if that host cannot
+  be reached, the tokens are still deleted here and the refresh token
+  instead runs out on the host's own clock — and an access token already
+  issued stays valid until it expires, within an hour (Section 4 item 3).
+  **If you never run `terakota login`, nothing changes for the commands you
+  already use:** they behave the same way, their receipts are identical
+  except for the version stamp, and the Software opens no connection to any
+  host of ours beyond Section 4 item 2; the control-plane commands refuse
+  locally, and a refusal for being signed out or unlinked tells you which
+  command clears it and never asks you to create an account.
 
 What is true in every one of those modes: no business data, no query, no
-query result, and no AppFolio or Dialpad credential ever reaches us. Your
-QuickBooks reads run from your machine to Intuit directly — the connect
-broker never carries them, and it never proxies a vendor data API. We are
-not affiliated with, endorsed by, or sponsored by AppFolio, Inc., Intuit
-Inc., or Dialpad, Inc.; their services are governed by your agreements with
-them.
+query result, and no AppFolio or Dialpad credential ever reaches us, and no
+receipt. Your QuickBooks reads run from your machine to Intuit directly —
+the connect broker never carries them, and it never proxies a vendor data
+API. We are not affiliated with, endorsed by, or sponsored by AppFolio,
+Inc., Intuit Inc., or Dialpad, Inc.; their services are governed by your
+agreements with them.
 
 - **Read-only toward your business systems, by construction.** The Software
   contains no code paths that write to the connected business systems; this is
@@ -158,17 +199,19 @@ You will: (a) use the Software only with credentials and accounts you are
 authorized to use, and in compliance with your agreements with AppFolio,
 Intuit, Dialpad, and any other vendor; (b) comply with applicable law,
 including privacy and financial-records law applicable to the data you
-access; (c) safeguard credentials, tokens, keystore passphrases, per-install
-device keys, and receipt chains stored on your machines — including backing
-up receipt chains if you rely on them; (d) validate outputs before relying
-on them for accounting, legal, or compliance purposes. The Software
-retrieves and records data; it does not provide accounting, legal, audit, or
-professional advice.
+access; (c) safeguard credentials, tokens (including the sign-in tokens
+`terakota login` stores), keystore passphrases, per-install device keys, and
+receipt chains stored on your machines — including backing up receipt chains
+if you rely on them; (d) validate outputs before relying on them for
+accounting, legal, or compliance purposes. The Software retrieves and
+records data; it does not provide accounting, legal, audit, or professional
+advice.
 
 ## 4. Updates, advisories, and every connection the Software makes to us
 
 The Software has no automatic updates, no telemetry, no analytics, and no crash
-reporting. It contacts exactly two classes of host we operate, and nothing else:
+reporting. It contacts exactly three classes of host — each one ours, or run
+for us by the sign-in provider item 3 names — and nothing else:
 
 1. **A user-invoked version/advisory check.** It does not exist yet. When it
    ships it will be described in the Privacy Notice before it exists, and it
@@ -179,23 +222,79 @@ reporting. It contacts exactly two classes of host we operate, and nothing else:
    through our connect service (from terakota v1.4.0). The authorization and
    the revocation happen when you ask for them. **The refresh does not — it
    runs automatically during normal use**, whenever the sealed access token
-   nears expiry (roughly hourly in active use; both tokens live sealed in your
-   local keystore). That is the one place the Software talks to us without you
-   asking, and it is why the older "contacts no service of ours on its own"
-   wording is gone.
+   nears expiry (roughly hourly in active use; both tokens live sealed in
+   your local keystore). That, and the sign-in renewal in item 3, are the
+   only two places the Software talks to a host in this list without you
+   asking for that particular call — both only while a command you ran is in
+   progress; a running `events-tail` (item 3) polls too, but only because
+   you started it and only until you stop it. That is why the older
+   "contacts no service of ours on its own" wording is gone.
+3. **The control plane, after you sign in and link (from terakota
+   `v1.8.0`).** Two hosts, sixteen commands, every one of them started by
+   you:
+   - **Our sign-in host, `dev-bo1prweh.us.auth0.com`, the host our sign-in
+     provider (Auth0) runs for us.** `terakota login` asks it for a device
+     code, prints a short code and the page to confirm it on, and opens that
+     page in your browser unless you tell it not to, then polls the host until
+     you approve or the code expires; it returns an access token that expires
+     within an hour and a refresh token that rotates on every use, both stored
+     only in your local keystore. `terakota logout` deletes both tokens from
+     your machine and asks the same host to revoke the refresh token (if that
+     host cannot be reached, the local deletion still happens and the refresh
+     token runs out on the host's clock: 30 days unused, 90 days after
+     sign-in). One more call goes there: when a control-plane command in the
+     next bullet finds the access token expired, the Software asks the same
+     host to renew it with the refresh token before the read — that renewal is
+     what rotates the refresh token, and it happens only inside a command you
+     ran (a running `events-tail` included). Nothing else in the Software
+     contacts that host.
+   - **Our control-plane API at `app.terakota.io/api/v1`,** reached with
+     that access token and only by these commands: `link` (a live check that
+     you are a member of the tenant you name — one `platform-status` read;
+     the link itself is written to a profile file on your machine, and
+     `unlink` removes it without contacting anyone); the reads
+     `platform-status`, `platform-topics`, `platform-subscriptions`,
+     `platform-queue-health`, `platform-quarantine` and `platform-dlq`; the
+     changes `platform-subscribe`, `platform-unsubscribe`, `platform-replay`
+     and `platform-catchall-replay`; and `events-tail`, which polls the
+     delivery-event index every few seconds for as long as you leave it
+     running — **each poll is one call**, the tail never starts on its own,
+     and it stops when you stop it. The MCP tools `platform_status_get`,
+     `platform_topics_list`, `platform_subscriptions_list`,
+     `platform_queue_health_get` and `platform_events_list` make the same
+     reads, one call each; no MCP tool signs in, links, changes routing, or
+     runs a tail. `account` (who you are signed in as) reads the entry on
+     your machine and calls neither host. A call sends the linked tenant,
+     the command, and that command's own inputs (a page position; the
+     routing change you asked for; the id of a held delivery to replay). It
+     receives our delivery metadata for that tenant — never an event's
+     content, an ingest token, a destination's address, or a secret. We
+     record these calls on our side (Privacy Notice §3a): a read or a tail
+     poll leaves one line — your account, the tenant, which command, the
+     time — in a log we delete after 90 days (if that line cannot be
+     written, the read still completes and the failure is noted in our
+     application log — the tenant, the command and the kind of failure,
+     never your account id); a change leaves one permanent line in the
+     routing audit; `account` leaves nothing. The reads and the tail record
+     nothing on your receipt chain, and the four change commands are
+     receipted on the linked company's chain from the release that ships
+     them.
 
-If you have no production connection through our connect service, the Software
-makes no call to any host of ours at all. This list is closed: adding another
-connection to a service of ours means changing this agreement and the Privacy
-Notice first, published and announced on the release repository before it takes
-effect.
+If you have no production connection through our connect service and have
+not signed in with `terakota login`, the Software makes no call to any host
+of ours at all. Signing in and linking are optional, and a release may carry
+fewer of the item-3 commands than listed — it never carries a call this
+Section does not. This list is closed: adding another connection to a
+service of ours means changing this agreement and the Privacy Notice first,
+published and announced on the release repository before it takes effect.
 
 Security advisories are published on the release repository per the Security
 Advisory & Support Policy; watch the repository to be notified. Support expiry
 never disables the Software: we build nothing that turns it off. Whether an old
-build keeps functioning otherwise depends on factors outside our control (your
-systems, vendor APIs, and — for production QuickBooks — the availability of the
-connect service described in Section 2), which Section 5 covers.
+build keeps functioning otherwise depends on factors outside our control
+(your systems, vendor APIs, and — for production QuickBooks and for the
+control-plane commands — the availability of the connect service and the
+control plane described in Section 2), which Section 5 covers.
 
 ## 5. No warranty
 
@@ -205,14 +304,16 @@ WARRANTIES, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING MERCHANTABILITY, FITNESS F
 PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, ACCURACY, AND UNINTERRUPTED OR
 ERROR-FREE OPERATION. WE DO NOT WARRANT THAT DATA RETRIEVED, RECORDED, OR VERIFIED
 BY THE SOFTWARE IS ACCURATE, COMPLETE, OR CURRENT — SOURCE SYSTEMS, NETWORKS, AND
-YOUR CONFIGURATION ARE OUTSIDE OUR CONTROL. WE DO NOT WARRANT THAT THE CONNECT
-SERVICE DESCRIBED IN SECTION 2 WILL BE AVAILABLE OR UNINTERRUPTED. SOME
-JURISDICTIONS DO NOT ALLOW CERTAIN DISCLAIMERS, SO PARTS OF THIS SECTION MAY NOT
-APPLY TO YOU.
+YOUR CONFIGURATION ARE OUTSIDE OUR CONTROL. WE DO NOT WARRANT THAT THE CONNECT SERVICE
+OR THE CONTROL PLANE DESCRIBED IN SECTION 2 WILL BE AVAILABLE OR UNINTERRUPTED. SOME
+JURISDICTIONS DO NOT ALLOW CERTAIN DISCLAIMERS, SO PARTS OF THIS SECTION MAY NOT APPLY
+TO YOU.
 
 "AS AVAILABLE" is not decorative here. Section 2 states exactly what stops
-working when the connect service is down, and for how long you can keep working
-without it.
+working when the connect service is down, and for how long you can keep
+working without it. When the control plane is unreachable, the control-plane
+commands refuse with a typed error and nothing local is affected — every
+other command keeps working.
 
 ## 6. Limitation of liability
 
@@ -226,9 +327,9 @@ IS FREE; THIS ALLOCATION OF RISK IS A CONDITION OF PROVIDING IT WITHOUT CHARGE.
 NOTHING IN THIS AGREEMENT LIMITS LIABILITY THAT CANNOT BE LIMITED UNDER APPLICABLE
 LAW.
 
-Claims about your terakota account or the connect service are addressed by the
-Portal Account Terms, which carry their own limitation of liability; for those
-claims, those terms control (Section 9).
+Claims about your terakota account, the connect service, or the control
+panel are addressed by the Portal Account Terms, which carry their own
+limitation of liability; for those claims, those terms control (Section 9).
 
 ## 7. Export compliance
 
@@ -249,37 +350,58 @@ receipt chains) stays where it is: we claim no rights in it and hold no copy of
 it; rights of third parties (your clients, employers, or data sources) in its
 contents are unaffected by this agreement.
 
-Ending this agreement does not by itself close your terakota account or delete
-its connection records. If you have connected production QuickBooks through our
-connect service, write to contact@bilans.io to close the account and an operator
-runs the offboarding sequence in the Portal Account Terms. There is no
-self-serve close button. Privacy Notice §3a states what is held, what the
+Ending this agreement does not by itself close your terakota account or
+delete its connection records, and neither does `terakota logout` — that
+asks our sign-in host to revoke the refresh token and deletes both tokens
+from your machine, nothing more (an access token already issued expires
+within an hour).
+If you hold an account, write to contact@bilans.io to close it and an
+operator runs the offboarding sequence in the Portal Account Terms. There is
+no self-serve close button. Privacy Notice §3a states what is held, what the
 closure removes, and what we keep and for how long after a connection is
-revoked. Closing the account blocks new connection attempts and
-stops token renewals; an access token already issued keeps working until it
-expires.
+revoked. Closing the account blocks new connection attempts, stops token
+renewals, and closes the control panel to you; an access token already
+issued keeps working until it expires, and routing changes you already made
+on a tenant stay as they are until an operator or another member changes
+them.
 
 ## 9. General
 
 This agreement is the entire agreement about the Software and supersedes prior
-discussions. If you use our connect service, the Portal Account Terms at
-`https://app.terakota.io/terms` govern your terakota account and that service,
-and this agreement governs the Software; where a claim concerns the account or
-the connect service, the Portal Account Terms control, and where it concerns the
-Software, this agreement controls. The Privacy Notice and the
-Security Advisory & Support Policy are referenced disclosures describing our
-practices, not contractual obligations, except where this agreement expressly
-incorporates a described practice; if they conflict with this agreement, this
-agreement governs. It is governed by the laws of Wyoming, excluding
-conflict-of-law rules; exclusive venue is Sheridan County, Wyoming. If a
-provision is unenforceable, the rest stands. You may not assign this agreement
-without our consent; we may assign it to a successor. No waiver is implied. U.S.
-Government users: the Software is commercial computer software under FAR 12.212
-/ DFARS 227.7202.
+discussions. If you hold a terakota account, the Portal Account Terms at
+`https://app.terakota.io/terms` govern that account, the connect service, and
+the control panel, and this agreement governs the Software; where a claim
+concerns the account, the connect service, or the control panel, the Portal
+Account Terms control, and where it concerns the Software, this agreement
+controls. The Privacy Notice and the Security Advisory & Support Policy are
+referenced disclosures describing our practices, not contractual obligations,
+except where this agreement expressly incorporates a described practice; if
+they conflict with this agreement, this agreement governs. It is governed by
+the laws of Wyoming, excluding conflict-of-law rules; exclusive venue is
+Sheridan County, Wyoming. If a provision is unenforceable, the rest stands.
+You may not assign this agreement without our consent; we may assign it to a
+successor. No waiver is implied. U.S. Government users: the Software is
+commercial computer software under FAR 12.212 / DFARS 227.7202.
 
 Contact: contact@bilans.io
 
 [Change log:
+v1.3 — the optional terakota account gains a second purpose, our control
+panel, and the Software gains an optional bridge to it (from terakota
+`v1.8.0`): `terakota login` (sign-in through our sign-in host),
+`terakota link` (one local company ↔ one hosted tenant), the `platform-*`
+reads and change commands, and `events-tail` (§2, §4). Section 4's
+enumerated closed set grows from two classes to three and names our sign-in
+host, `app.terakota.io/api/v1`, and every command that may call them, each
+poll of a running tail included; the "makes no call to any host of ours at
+all" sentence is now conditioned on not having signed in. What a
+control-plane call sends and receives is stated — our delivery metadata,
+never an event's content, never anything of yours (§2). Nothing about
+AppFolio, Dialpad, local operation, receipts, `verify-receipts`, or the
+connect service changes; unlinked use is unchanged and said so (§2).
+Termination separates `logout` from closure and states that closure leaves
+routing in place (§8); the Portal Account Terms now govern the control panel
+with the same precedence (§1, §6, §9).
 v1.2 — Dialpad added to the read surface (§2): reads run from your machine to
 Dialpad directly with a Dialpad API key you supply, receipted locally, with no
 account with us and no service of ours in the path; the surface is disclosed as

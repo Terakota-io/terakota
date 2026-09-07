@@ -1,8 +1,9 @@
 # terakota Security Advisory & Support Policy
 
-Version 1.2 — Effective 2026-08-13 — applies to the `terakota` and
-`verify-receipts` binaries and to the hosted connect service (the broker at
-`oauth.terakota.io` and the portal at `app.terakota.io`).
+Version 1.3 — Effective 2026-09-07 — applies to the `terakota` and
+`verify-receipts` binaries, to the hosted connect service (the broker at
+`oauth.terakota.io` and the portal at `app.terakota.io`), and to the control
+panel the portal serves (including its API at `app.terakota.io/api/v1`).
 
 ## 1. How we tell you about security problems
 
@@ -14,12 +15,12 @@ notified, watch the repository with security alerts enabled. We publish
 advisories for: vulnerabilities in our binaries, vulnerabilities inherited from
 embedded dependencies that are reachable in our usage, integrity incidents
 affecting the release pipeline itself, and security incidents affecting the
-connect service.
+connect service or the control panel (including its API).
 
 For the connect service there is a second path, because there is someone to
-reach: **if an incident affects your terakota account or a connection you made
-through the service, we notify you through the account** (the email on it), in
-addition to publishing. That notification path is the reason a production
+reach: **if an incident affects your terakota account, a connection you made
+through the service, or the routing of a tenant you belong to, we notify you
+through the account** (the email on it), in addition to publishing. That notification path is the reason a production
 QuickBooks connection requires an account at all — see the Privacy Notice §3a.
 
 Each advisory states: affected versions, severity (CVSS v4.0 score — with a
@@ -58,13 +59,18 @@ bug bounty is offered at this time.
 repository, terakota.io, **`oauth.terakota.io` (the connect broker), and
 `app.terakota.io` (the portal)**. Out of scope — AppFolio's, Intuit's, and
 Dialpad's systems (never test against accounts or systems you don't own; they
-have their own programs), social engineering, and physical attacks. Test the
-connect service only against your own account and your own QuickBooks company;
-do not attempt to reach another user's connection, and do not run volumetric or
-denial-of-service tests against it. We will not pursue legal action for
-good-faith research within this scope that respects privacy, avoids service
-disruption, and gives us the disclosure window; we treat reports as
-confidential and use them only to fix the issue and credit you.
+have their own programs), our sign-in provider's host
+`dev-bo1prweh.us.auth0.com` (Auth0 runs it and has its own program; a flaw in
+how the Software or the portal uses it is in scope, a flaw in Auth0 is theirs),
+social engineering, and physical attacks. Test the
+connect service only against your own account and your own QuickBooks
+company; do not attempt to reach another user's connection, and do not run
+volumetric or denial-of-service tests against it. Test the control panel
+only against a tenant you are a member of; do not attempt to reach another
+tenant's routing, audit rows, or event index. We will not pursue legal
+action for good-faith research within this scope that respects privacy,
+avoids service disruption, and gives us the disclosure window; we treat
+reports as confidential and use them only to fix the issue and credit you.
 
 ## 3. Support windows ("support-until")
 
@@ -91,17 +97,22 @@ path and honest advisories).
   nothing is disabled by us, and no build reports anything to us on its own,
   with one stated exception: from terakota v1.4.0, a production QuickBooks
   connection made through our connect service renews its token against our
-  broker automatically (EULA §4). Whether an old build still functions against
-  vendor APIs is outside our control.
+  broker automatically (EULA §4). From terakota `v1.8.0`, a signed-in,
+  linked binary also calls our control plane — but only for a command you
+  run, and a running `events-tail` only for as long as you leave it running
+  (EULA §4 item 3); nothing reports on its own. Whether an old build still
+  functions against vendor APIs is outside our control.
 - Support-until dates are a property of **binaries**. The connect service is
   operated, not versioned: it is covered by this policy while it runs, and
   Section 5 states what we commit to for it.
 
 ## 4. Scope honesty
 
-This policy covers the binaries we sign and ship and the connect service we
-operate. It does not cover: forks or rebuilt binaries; the conduct or
-availability of AppFolio, Intuit, or Dialpad APIs; credentials, tokens,
+This policy covers the binaries we sign and ship, the connect service we
+operate, and the control panel the portal serves (including its API at
+`app.terakota.io/api/v1`). It does not cover: forks or rebuilt binaries; the
+conduct or availability of AppFolio, Intuit, or Dialpad APIs, or of Auth0,
+whose host serves our sign-in; credentials, tokens,
 keystores, device keys, or receipt chains on your machines (yours to protect —
 see the EULA §3); or AI agents that drive terakota. Receipt chains' evidence
 class and its limits are stated in the EULA §2 and the FAQ in the release
@@ -112,9 +123,17 @@ Two boundaries worth stating plainly, because the connect service changes them.
 The token capsule the broker returns is sealed against anyone who can read the
 URLs and browser history involved in an authorization; it is not a defense
 against an attacker who already controls your machine's processes or keychain.
-And a revoked or suspended connection stops new authorizations and stops token
-renewal immediately — but an access token already issued keeps working until it
-expires, so revocation is fast, not instantaneous.
+And a revoked or suspended connection stops new authorizations and stops
+token renewal immediately — but an access token already issued keeps working
+until it expires, so revocation is fast, not instantaneous.
+
+A third boundary comes with the control panel: the sign-in tokens
+`terakota login` stores on your machine can read the routing of the tenants
+you belong to — and change it from the release that ships the binary's
+change commands; they are yours to protect. `terakota logout` asks the
+sign-in host to revoke the refresh token and deletes both tokens from your
+machine — and, as with the connect service, an access token already issued
+keeps working until it expires, within an hour.
 
 ## 5. The connect service: what we commit to
 
@@ -129,6 +148,10 @@ commitments the binaries do not:
   adversarial security review of the connect service happens before the service
   serves its first real customer. Until then the connect route is not open to
   third parties.
+- **The control panel, likewise.** The control panel and its API are
+  switched on for the operator's own account only until we open it to other
+  accounts, and an adversarial review of the panel's tenant isolation runs
+  before the first one. Until then no third-party account is entitled to it.
 - **No dumps, no live poking.** Production is not instrumented dynamically and
   is not dumped. The client secret lives in the host's secret store and never
   appears in a command line, a repository, or a chat.
@@ -145,6 +168,23 @@ long, and how to delete it. The Portal Account Terms at
 `https://app.terakota.io/terms` govern the account and the connect service.
 
 [Change log:
+v1.3 — the control panel is brought in scope. The policy's scope line, §1's
+advisory list and account-notification path, and §4's coverage sentence name
+the panel the portal serves and its API at `app.terakota.io/api/v1`; safe
+harbor gains a testing rule for it — test only against a tenant you are a
+member of, never another tenant's routing, audit rows, or event index — and
+names our sign-in provider's host out of scope beside the vendors' systems
+(§2); §4 also names Auth0's conduct and availability among what the policy
+does not cover.
+§3's "nothing reports on its own" line records that from terakota `v1.8.0` a
+signed-in, linked binary calls the control plane, but only for a command you
+run and a tail only while you leave it running — the one stated exception
+(automatic token refresh) stays one. §4 adds a third boundary: the sign-in
+tokens on your machine can read, and later change, the routing of the
+tenants you belong to. §5 adds the panel's review posture:
+operator-account-only until we open it to other accounts, with an
+adversarial review of tenant isolation before the first one. No commitment
+for the binaries or the connect service changes.
 v1.2 — Dialpad is named in the two scope statements, so its absence cannot be
 read as an invitation: Dialpad's systems join AppFolio's and Intuit's as out of
 scope for testing (§2), and Dialpad's API conduct and availability join what
