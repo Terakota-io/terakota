@@ -80,12 +80,14 @@ three classes:
      content, an ingest token, a destination's address, or a secret. We
      record these calls on our side (Section 3a): a read or a tail poll
      leaves one line — your account, the tenant, which command, the time —
-     in a log we delete after 90 days; a change leaves one permanent line in
-     the routing audit; `account` leaves nothing. The reads and the tail
-     record nothing on your receipt chain, and the four change commands are
-     receipted on the linked company's chain from the release that ships
-     them. What each call carries is stated in Section 3a, together with
-     what we record about it and for how long.
+     in a log we delete after 90 days (if that line cannot be written, the
+     read still completes and our server log records the failure with the
+     same fields); a change leaves one permanent line in the routing audit;
+     `account` leaves nothing. The reads and the tail record nothing on your
+     receipt chain, and the four change commands are receipted on the linked
+     company's chain from the release that ships them. What each call
+     carries is stated in Section 3a, together with what we record about it
+     and for how long.
 
 AppFolio, Dialpad, local reconciliation, receipts, `verify-receipts`, and an
 Intuit sandbox company under your own registered Intuit application need no
@@ -261,21 +263,22 @@ control-plane read and each `events-tail` poll is recorded too, but
 separately and more briefly: one line in a read log in our control store —
 your account id, the tenant, which read, and the time, with no inputs and no
 results — and nothing at all for the command that only asks who you are
-signed in as. While a tail runs that is one line every few seconds, which is
-a record of when your machine was polling. We delete read-log lines older
-than 90 days, and closing your account deletes yours in the same step that
-clears your email and display name. The change rows above are different:
-they are append-only and have no automatic expiry today. For each event
-delivered on a tenant's hosted spine we also keep one index row — its
-sequence, topic, entity id, event id, the delivery's message id, and when it
-was received and delivered; the table has no payload column, so it cannot
-hold an event's content, and rows older than 90 days are removed on the
-operator's retention run. Neither the panel nor the binary can see an ingest
-token, a quarantined delivery's body or signature, a dead letter's payload,
-or a destination's address or secret; dead-letter error text is shown with
-addresses masked. Other members of the same tenant can see, on the panel's
-audit view, that a member account made a change — the action, the time and
-the digest, not which account.
+signed in as. If a read's line cannot be written, the read still completes
+and our server log records the failure with the same fields. While a tail
+runs that is one line every few seconds, which is a record of when your
+machine was polling. We delete read-log lines older than 90 days, and
+closing your account deletes yours in the same step that clears your email
+and display name. The change rows above are different: they are append-only
+and have no automatic expiry today. For each event delivered on a tenant's
+hosted spine we also keep one index row — its sequence, topic, entity id,
+event id, the delivery's message id, and when it was received and delivered;
+the table has no payload column, so it cannot hold an event's content, and
+rows older than 90 days are removed on the operator's retention run. Neither
+the panel nor the binary can see an ingest token, a quarantined delivery's
+body or signature, a dead letter's payload, or a destination's address or
+secret; dead-letter error text is shown with addresses masked. Other members
+of the same tenant can see, on the panel's audit view, that a member account
+made a change — the action, the time and the digest, not which account.
 
 **Sign-in tokens on your machine (from terakota `v1.8.0`).**
 `terakota login` leaves two tokens on your machine and nowhere of ours: a
@@ -283,9 +286,12 @@ refresh token that rotates on every use and an access token that expires
 within an hour. They live in your operating system's keychain, or in
 terakota's encrypted-file keystore if you opted into that fallback, beside
 your vendor credentials and sealed the same way (on the file backend the
-account entry has a passphrase of its own). `terakota logout` revokes the
-refresh token with our sign-in provider and deletes both from your machine.
-If a refresh token is ever presented twice, our sign-in provider revokes the
+account entry has a passphrase of its own). `terakota logout` deletes both
+from your machine and asks our sign-in provider to revoke the refresh token;
+if the provider cannot be reached, the local deletion still happens and the
+refresh token runs out on the provider's clocks below. If a refresh token
+that has already been rotated is presented again — outside a ten-second
+window that absorbs a retried request — our sign-in provider revokes the
 whole family of tokens issued from it. A refresh token also expires on the
 provider's clocks — 90 days after sign-in, or 30 days without use — after
 which you sign in again. An access token already issued keeps working until

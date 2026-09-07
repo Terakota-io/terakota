@@ -105,15 +105,16 @@ How much of us is in the path depends on what you connect:
   and the command's own inputs; it never sends a vendor credential, a query,
   a result, a receipt, or your local company id, and nothing you type as
   `--intent` leaves your machine. `terakota unlink` removes the link and
-  contacts nothing; `terakota logout` asks our sign-in host to revoke the
-  refresh token and deletes both tokens from your machine — an access token
-  already issued stays valid until it expires, within an hour (Section 4
-  item 3). **If you never run `terakota login`, nothing
-  changes:** the same commands behave the same way, receipts on them are
-  identical except for the version stamp, and the Software opens no
-  connection to any host of ours beyond Section 4 item 2. A refusal for
-  being signed out or unlinked tells you which command clears it and never
-  asks you to create an account.
+  contacts nothing; `terakota logout` deletes both tokens from your machine
+  and asks our sign-in host to revoke the refresh token; if that host cannot
+  be reached, the tokens are still deleted here and the refresh token
+  instead runs out on the host's own clock — and an access token already
+  issued stays valid until it expires, within an hour (Section 4 item 3).
+  **If you never run `terakota login`, nothing changes:** the same commands
+  behave the same way, receipts on them are identical except for the version
+  stamp, and the Software opens no connection to any host of ours beyond
+  Section 4 item 2. A refusal for being signed out or unlinked tells you
+  which command clears it and never asks you to create an account.
 
 What is true in every one of those modes: no business data, no query, no
 query result, and no AppFolio or Dialpad credential ever reaches us, and no
@@ -233,17 +234,19 @@ for us by the sign-in provider item 3 names — and nothing else:
    - **Our sign-in host, `dev-bo1prweh.us.auth0.com`, the host our sign-in
      provider (Auth0) runs for us.** `terakota login` asks it for a device
      code, prints a short code and the page to confirm it on, and opens that
-     page in your browser unless you tell it not to, then polls the host
-     until you approve or the code expires; it returns an access token that
-     expires within an hour and a refresh token that rotates on every use, both
-     stored only in your local keystore. `terakota logout` asks the same
-     host to revoke the refresh token and deletes both tokens from your
-     machine. One more call goes there: when a control-plane command in the
+     page in your browser unless you tell it not to, then polls the host until
+     you approve or the code expires; it returns an access token that expires
+     within an hour and a refresh token that rotates on every use, both stored
+     only in your local keystore. `terakota logout` deletes both tokens from
+     your machine and asks the same host to revoke the refresh token (if that
+     host cannot be reached, the local deletion still happens and the refresh
+     token runs out on the host's clock: 30 days unused, 90 days after
+     sign-in). One more call goes there: when a control-plane command in the
      next bullet finds the access token expired, the Software asks the same
-     host to renew it with the refresh token before the read — that renewal
-     is what rotates the refresh token, and it happens only inside a command
-     you ran (a running `events-tail` included). Nothing else in the
-     Software contacts that host.
+     host to renew it with the refresh token before the read — that renewal is
+     what rotates the refresh token, and it happens only inside a command you
+     ran (a running `events-tail` included). Nothing else in the Software
+     contacts that host.
    - **Our control-plane API at `app.terakota.io/api/v1`,** reached with
      that access token and only by these commands: `link` (a live check that
      you are a member of the tenant you name — one `platform-status` read;
@@ -267,10 +270,12 @@ for us by the sign-in provider item 3 names — and nothing else:
      content, an ingest token, a destination's address, or a secret. We
      record these calls on our side (Privacy Notice §3a): a read or a tail
      poll leaves one line — your account, the tenant, which command, the
-     time — in a log we delete after 90 days; a change leaves one permanent
-     line in the routing audit; `account` leaves nothing. The reads and the
-     tail record nothing on your receipt chain, and the four change commands
-     are receipted on the linked company's chain from the release that ships
+     time — in a log we delete after 90 days (if that line cannot be
+     written, the read still completes and our server log records the
+     failure with the same fields); a change leaves one permanent line in
+     the routing audit; `account` leaves nothing. The reads and the tail
+     record nothing on your receipt chain, and the four change commands are
+     receipted on the linked company's chain from the release that ships
      them.
 
 If you have no production connection through our connect service and have
