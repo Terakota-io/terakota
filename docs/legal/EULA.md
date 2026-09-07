@@ -273,11 +273,12 @@ for us by the sign-in provider item 3 names — and nothing else:
      poll leaves one line — your account, the tenant, which command, the
      time — in a log we delete after 90 days (if that line cannot be
      written, the read still completes and the failure is noted in our
-     application log — the tenant, the command and the error, never your
-     account id); a change leaves one permanent line in the routing audit;
-     `account` leaves nothing. The reads and the tail record nothing on your
-     receipt chain, and the four change commands are receipted on the linked
-     company's chain from the release that ships them.
+     application log — the tenant, the command and the kind of failure,
+     never your account id); a change leaves one permanent line in the
+     routing audit; `account` leaves nothing. The reads and the tail record
+     nothing on your receipt chain, and the four change commands are
+     receipted on the linked company's chain from the release that ships
+     them.
 
 If you have no production connection through our connect service and have
 not signed in with `terakota login`, the Software makes no call to any host

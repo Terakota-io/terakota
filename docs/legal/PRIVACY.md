@@ -82,13 +82,13 @@ three classes:
      leaves one line — your account, the tenant, which command, the time —
      in a log we delete after 90 days (if that line cannot be written, the
      read still completes and the failure is noted in our application log —
-     the tenant, the command and the error, never your account id); a change
-     leaves one permanent line in the routing audit; `account` leaves
-     nothing. The reads and the tail record nothing on your receipt chain,
-     and the four change commands are receipted on the linked company's
-     chain from the release that ships them. What each call carries is
-     stated in Section 3a, together with what we record about it and for how
-     long.
+     the tenant, the command and the kind of failure, never your account
+     id); a change leaves one permanent line in the routing audit; `account`
+     leaves nothing. The reads and the tail record nothing on your receipt
+     chain, and the four change commands are receipted on the linked
+     company's chain from the release that ships them. What each call
+     carries is stated in Section 3a, together with what we record about it
+     and for how long.
 
 AppFolio, Dialpad, local reconciliation, receipts, `verify-receipts`, and an
 Intuit sandbox company under your own registered Intuit application need no
@@ -265,23 +265,26 @@ separately and more briefly: one line in a read log in our control store —
 your account id, the tenant, which read, and the time, with no inputs and no
 results — and nothing at all for the command that only asks who you are
 signed in as. If a read's line cannot be written, the read still completes
-and the failure is noted in our application log — the tenant, the command
-and the error, never your account id; that log lives on our host for a
-bounded period and holds no identifier of yours. While a tail runs that is
-one line every few seconds, which is a record of when your machine was
-polling. We delete read-log lines older than 90 days, and closing your
-account deletes yours in the same step that clears your email and display
-name. The change rows above are different: they are append-only and have no
-automatic expiry today. For each event delivered on a tenant's hosted spine
-we also keep one index row — its sequence, topic, entity id, event id, the
-delivery's message id, and when it was received and delivered; the table has
-no payload column, so it cannot hold an event's content, and rows older than
-90 days are removed on the operator's retention run. Neither the panel nor
-the binary can see an ingest token, a quarantined delivery's body or
-signature, a dead letter's payload, or a destination's address or secret;
-dead-letter error text is shown with addresses masked. Other members of the
-same tenant can see, on the panel's audit view, that a member account made a
-change — the action, the time and the digest, not which account.
+and the failure is noted in our application log with the tenant, the command
+and the kind of failure — never your account id. Like every request to the
+Portal and its API, a control-plane call also leaves one line in that
+application log — the route, the outcome, the timing and your account id,
+with no inputs and no bodies — which lives with our host, Fly, for a bounded
+period. While a tail runs that is one line every few seconds, which is a
+record of when your machine was polling. We delete read-log lines older than
+90 days, and closing your account deletes yours in the same step that clears
+your email and display name. The change rows above are different: they are
+append-only and have no automatic expiry today. For each event delivered on
+a tenant's hosted spine we also keep one index row — its sequence, topic,
+entity id, event id, the delivery's message id, and when it was received and
+delivered; the table has no payload column, so it cannot hold an event's
+content, and rows older than 90 days are removed on the operator's retention
+run. Neither the panel nor the binary can see an ingest token, a quarantined
+delivery's body or signature, a dead letter's payload, or a destination's
+address or secret; dead-letter error text is shown with addresses masked.
+Other members of the same tenant can see, on the panel's audit view, that a
+member account made a change — the action, the time and the digest, not
+which account.
 
 **Sign-in tokens on your machine (from terakota `v1.8.0`).**
 `terakota login` leaves two tokens on your machine and nowhere of ours: a
