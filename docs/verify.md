@@ -190,10 +190,22 @@ be worse than one that stops. So a `verify-receipts` older than v1.9.0 that meet
 chain carrying the pair fails it outright, with `unknown receipt type "control_intent"`
 and exit `1`, and what you get is a type name rather than an upgrade instruction. If
 you verify chains exported by someone else's CLI, install v1.9.0 or later first.
-Nothing in v1.9.0 writes the pair: the four change verbs it can grade
-(`platform-subscribe`, `platform-unsubscribe`, `platform-replay`,
-`platform-catchall-replay`) are not commands in this release and arrive in a later one,
-which is the point of shipping the verifier first.
+
+**v1.10.0 is the release that writes the pair.** v1.9.0 could grade it and nothing
+emitted it; the four change verbs it was built for (`platform-subscribe`,
+`platform-unsubscribe`, `platform-replay`, `platform-catchall-replay`) are commands
+from v1.10.0 on. Nothing in the verifier changed between the two releases, so a
+`verify-receipts` from either one grades these receipts, and shipping the verifier a
+release ahead of the producer was the point.
+
+What that means for a chain you receive. All three act outcomes are now producible from
+ordinary runs, and one chain can carry `ok`, `refused` and `error` acts, sometimes for
+the same verb: a chain is not suspect for holding a mix. The incomplete case is
+narrower than it may look. Every act, whatever its outcome, is appended on a context
+detached from cancellation, so interrupting a change after it dialled still writes the
+act. An intent left without one therefore means the process died between the two
+appends, or the append itself failed, which is exactly why the verifier reads it as an
+outcome never observed rather than as nothing having happened.
 
 **What a pass establishes.** The evidence class is **artifact integrity**. The
 records are hash-linked, so a partial change — one edited row, a truncated file, a
