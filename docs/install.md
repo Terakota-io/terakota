@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.8.0 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.9.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.8.0_linux_amd64.deb
-    sudo rpm -i  terakota_v1.8.0_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.9.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.9.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -58,8 +58,8 @@ Upgrade through the channel you installed with:
 
     brew upgrade terakota                           # Homebrew
     curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
-    sudo dpkg -i terakota_v1.8.0_linux_amd64.deb    # .deb — installs over the old
-    sudo rpm -U  terakota_v1.8.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+    sudo dpkg -i terakota_v1.9.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.9.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
 
 For the MCP extension, download the new `.mcpb` for your platform and install it
 from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
@@ -73,12 +73,19 @@ binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
 step attached: see the keystore note under
 [Where your credentials live](#where-your-credentials-live).
 
-**v1.8.0 reprints the first-run notice once.** It reprints only when the terms
-version it pins changes, and v1.8.0 moves from terms 1.2 to terms 1.3 — the
-version published on 2026-09-07 ([what changed](https://github.com/Terakota-io/terakota/issues/20)):
-the optional sign-in and link to a hosted Terakota tenant's control plane join the
-closed set of connections, and the notice says what a control-plane call sends.
-Nothing else about the upgrade changes; `terakota about` shows the notice any time.
+**v1.9.0 does not reprint the first-run notice.** It reprints only when the terms
+version it pins changes, and v1.9.0 stays on terms 1.3, the version v1.8.0 already
+pinned. Coming from a release older than v1.8.0 you see it once, because v1.8.0 is
+where the pinned terms moved to 1.3
+([what changed](https://github.com/Terakota-io/terakota/issues/20)).
+`terakota about` shows the notice any time.
+
+**v1.9.0's `verify-receipts` understands the control-plane change pair.** That is the
+whole release: no new command and no new MCP tool; the one thing that behaves
+differently is `verify-receipts`, which now grades that pair.
+The reason to take it is that a verifier older than v1.9.0 fails a chain carrying that
+pair outright, so you want the new one in hand before such a chain reaches you. See
+[verify.md](verify.md).
 
 **The tool registry moved in v1.7.0**, so receipts minted by v1.7.0 carry a new
 `registry_version`. Nothing breaks: `verify-receipts` grades the chain, not the
@@ -173,9 +180,9 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.8.0_linux_amd64.tar.gz`,
-  `terakota_v1.8.0_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.8.0_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.9.0_linux_amd64.tar.gz`,
+  `terakota_v1.9.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.9.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
@@ -205,7 +212,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.8.0_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.9.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
