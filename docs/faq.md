@@ -75,13 +75,16 @@ the tenant, the company, the verb and its inputs, and proceeds only when you typ
 tenant slug back exactly, within 120 seconds; a wrong word, a bare newline or silence
 cancels without dialling anything. Unlike the reads, each change is a receipted act: a
 `control_intent` lands on the company's chain before the control plane is dialled and a
-`control_act` after it answers, so an interrupted change leaves a visibly incomplete pair
-rather than a silent one. The act records `ok` with the effect and the audit row the
-control plane wrote, `refused` with the control plane's own reason, or `error` when no
-readable answer came back at all. `terakota evidence` folds the pair into one timeline
-row: the verb and the tenant in the title, the inputs as one fact, the outcome as the
-status, and your stated intent beneath it, labelled caller-supplied and unverified as
-always.
+`control_act` once the attempt ends, whether a readable answer came back or not. The act
+records `ok` with the effect and the audit row the control plane wrote, `refused` with the
+control plane's own reason, or `error` when nothing readable arrived at all: a dial that
+failed, a timeout, a body that is not an envelope, or a class the binary does not know.
+Every act is appended on a context detached from cancellation, so interrupting the command
+after it dialled still writes one. An intent left with no act therefore means the process
+died between the two appends, or the append to the chain itself failed. `terakota
+evidence` folds the pair into one timeline row: the verb and the tenant in the title, the
+inputs as one fact, the outcome as the status, and your stated intent beneath it, labelled
+caller-supplied and unverified as always.
 
 **Why does a change command refuse in an agent or a script?** Because stdin is not an
 interactive controlling terminal and the four change commands require one. The class is
@@ -146,16 +149,30 @@ production QuickBooks connection and no `terakota login` it contacts no host of
 ours at all, and its network connections are to the systems you point it at
 (AppFolio, Intuit, Dialpad), using your credentials.
 
-**Does a change command send anything else?** No. One change is one POST, and it carries
-three things: the bearer `terakota login` obtained, the tenant slug as a path segment,
-and that verb's own inputs as a single JSON object. Never sent: the `--intent` text,
-which is echoed on your envelope and recorded on the receipt pair and never leaves the
-machine; the local company id; the invocation id; the dedup key; the receipt pair itself;
-anything from your vendor sources; and anything else on your machine. What comes back is
-one record naming the effect, the audit row on our side and that row's two digests, never
-a payload, an endpoint or a secret reference. The set of hosts the binary can dial at all
-is the one described under **Does terakota phone home?** above, and a change adds no host
-to it.
+**Does a change command send anything else?** No, and the traffic is short. The change
+itself is one POST to the control plane carrying three things: the bearer `terakota login`
+obtained, the tenant slug as a path segment, and that verb's own inputs as a single JSON
+object. Two things can ride alongside it. If the access token has expired, the binary
+renews it with the sign-in service first, and that request carries the refresh token and
+nothing else, never the change, your inputs or your intent. And if the control plane
+answers 401, the binary tries once more for a renewed token and re-sends the same POST
+with it, but only when the token actually changed; the same bearer is never presented
+twice. Never sent at all: the `--intent` text, which is echoed on your envelope and
+recorded on the receipt pair and never leaves the machine; the local company id; the
+invocation id; the dedup key; the receipt pair itself; anything from your vendor sources;
+and anything else on your machine.
+
+What comes back depends on how the change went. When it was written and audited, the
+envelope carries one record, naming the effect, the `audit_seq` of the audit row on our
+side and that row's two digests, with `replayed` and `left` counts on the catch-all sweep
+alone, and the act on your chain records `ok`. When the control plane declines on the
+merits, the envelope carries no record and names its reason token in the detail, no audit
+row exists for it, and the act records `refused`. When nothing readable arrives, the class
+is `control_plane_unavailable` and the act records `error`, which says the outcome was
+never observed. Once the receipt pair exists the envelope carries `receipt_ref` whatever
+the outcome. No answer of any kind carries a payload, an endpoint or a secret reference,
+and the set of hosts the binary can dial at all is the one described under **Does terakota
+phone home?** above; a change adds no host to it.
 
 **What data can you (the makers) see?** None of your business data, in any mode.
 Your AppFolio and Dialpad credentials, your queries, your results, and your receipt

@@ -93,10 +93,11 @@ you type the tenant slug back. Nothing else changes for an upgrader: the reads,
 Two things to know before you run one. A change succeeds only against a hosted control
 plane already updated for this release; until it is, the command answers a typed refusal
 naming the class and the next action that clears it. And a refusal is not always a local
-no-op: once the terminal and the typed slug are past, the command
-writes a `control_intent` on that company's chain before it dials and a `control_act`
-after the answer, so a refused or unreadable answer still leaves the pair behind.
-Nothing else on your machine changes either way. The verifier that grades the pair
+no-op: once the terminal and the typed slug are past, the command writes a
+`control_intent` on that company's chain before it dials and a `control_act` once the
+attempt ends, whether a readable answer came back or not, so a refusal and an unreadable
+answer both leave the pair behind. The chain is the only local state a change touches;
+no other local state changes either way. The verifier that grades the pair
 shipped in v1.9.0, so keep `verify-receipts` on v1.9.0 or later; an older one fails a
 chain carrying the pair outright. See [verify.md](verify.md).
 
