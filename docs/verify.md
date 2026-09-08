@@ -149,6 +149,40 @@ moving chain content off the machine: *link records carry the correlation key ma
 that formed them — for exact-dimension links that includes the entry's date, amount and
 account set.* Read [reconcile.md](reconcile.md) before you hand one to anybody.
 
+**From v1.9.0**, the verifier also grades the control-plane change pair. A change to a
+hosted Terakota tenant's control plane is two records sharing one `dedup_key`: a
+`control_intent`, chained before the control plane is dialed and carrying
+`outcome: pending`, and a `control_act`, chained after the answer with an outcome of
+`ok`, `refused` or `error`. `ok` means the change was written and audited: the act
+carries the audit row's own before and after digests, and the verifier re-checks that
+they follow the effect the act claims rather than taking them on trust. `refused` means
+a typed answer came back declining the change, named by an `outcome_class` from a
+closed set. `error` means no answer arrived at all, the one class it may carry being
+`control_plane_unavailable`, so it records that the outcome was never observed, not
+that nothing happened. The intent has to come first: an act with no intent on the
+chain, or one ordered before its intent, is a real failure, because the same process
+appends the intent before it dials, so a missing one is a removed record. An intent
+with no act is not a failure: it reports as incomplete (exit `4`, "intended, outcome
+never observed"), the same valid terminal state a dangling `read_intent` gets.
+
+Two things about that family are stricter than the rest of the chain, on purpose. Its
+member set is closed: where a read, link or connect record tolerates a member the
+verifier does not know, a control record carrying one fails and names it, because an
+additive member here needs a verifier release before anything may write it. And the
+inputs it records are a closed tuple per verb, which is how "never an endpoint, never
+a secret reference, never a payload" is checked by shape instead of by reading content.
+
+**Upgrade your verifier before you meet one.** An unknown receipt type fails the whole
+chain, deliberately: a verifier that quietly skipped a record it could not read would
+be worse than one that stops. So a `verify-receipts` older than v1.9.0 that meets a
+chain carrying the pair fails it outright, with `unknown receipt type "control_intent"`
+and exit `1`, and what you get is a type name rather than an upgrade instruction. If
+you verify chains exported by someone else's CLI, install v1.9.0 or later first.
+Nothing in v1.9.0 writes the pair: the four change verbs it can grade
+(`platform-subscribe`, `platform-unsubscribe`, `platform-replay`,
+`platform-catchall-replay`) are not commands in this release and arrive in a later one,
+which is the point of shipping the verifier first.
+
 **What a pass establishes.** The evidence class is **artifact integrity**. The
 records are hash-linked, so a partial change — one edited row, a truncated file, a
 corrupted byte — breaks the linkage and surfaces in every check above. A wholesale
