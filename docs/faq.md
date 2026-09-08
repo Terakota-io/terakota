@@ -65,6 +65,62 @@ faked by anything with shell access, so what the fence buys is that an agent can
 confirm a link by accident on its way past, and the receipt each verb writes names the
 review **surface** (`human:cli`), never an actor.
 
+**Can I change routing from the CLI?** From v1.10.0, yes, for a company you have linked
+to a hosted Terakota tenant. `terakota platform-subscribe` creates or updates one routing
+row, `platform-unsubscribe` removes one, `platform-replay` requests the replay of one
+quarantined capture, and `platform-catchall-replay` re-routes the preserved events whose
+topic is now registered and subscribed. All four are CLI verbs only: no MCP row and no
+agent tool. Each runs the same ceremony. It prints the act it is about to perform, naming
+the tenant, the company, the verb and its inputs, and proceeds only when you type the
+tenant slug back exactly, within 120 seconds; a wrong word, a bare newline or silence
+cancels without dialling anything. Unlike the reads, each change is a receipted act: a
+`control_intent` lands on the company's chain before the control plane is dialled and a
+`control_act` once the attempt ends, whether a readable answer came back or not. The act
+records `ok` with the effect and the audit row the control plane wrote, `refused` with the
+control plane's own reason, or `error` when nothing readable arrived at all: a dial that
+failed, a timeout, a body that is not an envelope, or a class the binary does not know.
+Every act is appended on a context detached from cancellation, so interrupting the command
+after it dialled still writes one. An intent left with no act therefore means the process
+died between the two appends, or the append to the chain itself failed. `terakota
+evidence` folds the pair into one timeline row: the verb and the tenant in the title, the
+inputs as one fact, the outcome as the status, and your stated intent beneath it, labelled
+caller-supplied and unverified as always.
+
+**Why does a change command refuse in an agent or a script?** Because stdin is not an
+interactive controlling terminal and the four change commands require one. The class is
+`no_controlling_terminal`; the refusal fires before a profile is read, a chain is opened
+or a keystore is touched, and there is deliberately no flag, environment variable or
+automation path that bypasses it. It is the same fence `links-confirm` and `links-revoke`
+carry, with the same limit stated in the refusal itself: a pty can be faked by anything
+with shell access, so it is a bar rather than a proof. What it buys is that an agent
+cannot re-route a tenant's stream on its way past. The reads need no terminal and are
+unaffected, so an agent can still see what the routing is and propose a change; running
+the change is a human act at a terminal, and the receipt pair records the surface as
+`human:cli`.
+
+**What does `mutation_refused` mean?** That the control plane read your change, was
+entitled to act on it, and declined on the merits. The detail names its own reason token,
+and that token is the only thing the control plane says which reaches your terminal. The
+list is closed: `absent`, `already_requested`, `already_replayed`, `not_routable`,
+`empty_registry`, `destination_cap`, `chartered`, `destination_foreign`,
+`binding_refused`, `queue_profile`, `source_unbound`. Nothing was written on the control
+plane and no audit row exists for it, and the `control_act` on your chain records
+`refused` with that token as its `outcome_class`. Read the reason, correct the inputs,
+re-run. A token outside that list is not treated as a refusal at all: an answer the
+binary cannot read is an outcome it never observed, so the act records `error` with class
+`control_plane_unavailable`, and that is the one case where whether the change landed is
+genuinely not known here. Re-running the same command is how you find out, because each
+change states the routing you want, so a re-run either applies it or reports what already
+stands.
+
+**What is `chain_held`?** Another process already holds that company's receipt chain,
+usually a running MCP extension or a second `terakota` working on the same company. A
+change opens and locks the chain because it writes to it, which the `platform-*` reads
+never do, so a change is the one linked verb that will not run beside a live
+`terakota mcp` on that company. Nothing was changed, nothing was dialled, and the
+passphrase was never asked for. Close the other process, or point the change at a
+different `--home`, and re-run.
+
 **Why did `registry_version` change?** Because v1.7.0 added the three composite tool rows
 to the static manifest and closed each row's receipt-contract declaration into an enum,
 and `registry_version` is a hash over the whole table — so it rehashes as a whole:
@@ -87,10 +143,36 @@ plus the token renewal, which runs on its own whenever the access token nears
 expiry (roughly hourly in active use). The second is optional and exists from
 v1.8.0: `terakota login` signs the binary in through our sign-in host, and after
 you link a company with `terakota link` the `platform-*` read commands and
-`events-tail` read our control plane — each call started by you. With no
+`events-tail` read our control plane, and from v1.10.0 the four `platform-*` change
+commands post to it. Every one of those calls is started by you. With no
 production QuickBooks connection and no `terakota login` it contacts no host of
 ours at all, and its network connections are to the systems you point it at
 (AppFolio, Intuit, Dialpad), using your credentials.
+
+**Does a change command send anything else?** No, and the traffic is short. The change
+itself is one POST to the control plane carrying three things: the bearer `terakota login`
+obtained, the tenant slug as a path segment, and that verb's own inputs as a single JSON
+object. Two things can ride alongside it. If the access token has expired, the binary
+renews it with the sign-in service first, and that request carries the refresh token and
+nothing else, never the change, your inputs or your intent. And if the control plane
+answers 401, the binary tries once more for a renewed token and re-sends the same POST
+with it, but only when the token actually changed; the same bearer is never presented
+twice. Never sent at all: the `--intent` text, which is echoed on your envelope and
+recorded on the receipt pair and never leaves the machine; the local company id; the
+invocation id; the dedup key; the receipt pair itself; anything from your vendor sources;
+and anything else on your machine.
+
+What comes back depends on how the change went. When it was written and audited, the
+envelope carries one record, naming the effect, the `audit_seq` of the audit row on our
+side and that row's two digests, with `replayed` and `left` counts on the catch-all sweep
+alone, and the act on your chain records `ok`. When the control plane declines on the
+merits, the envelope carries no record and names its reason token in the detail, no audit
+row exists for it, and the act records `refused`. When nothing readable arrives, the class
+is `control_plane_unavailable` and the act records `error`, which says the outcome was
+never observed. Once the receipt pair exists the envelope carries `receipt_ref` whatever
+the outcome. No answer of any kind carries a payload, an endpoint or a secret reference,
+and the set of hosts the binary can dial at all is the one described under **Does terakota
+phone home?** above; a change adds no host to it.
 
 **What data can you (the makers) see?** None of your business data, in any mode.
 Your AppFolio and Dialpad credentials, your queries, your results, and your receipt
@@ -111,8 +193,9 @@ put no service of ours in the path. The full field list is in
 If you sign in with `terakota login` and link a company (from v1.8.0), we hold two
 more things, both described in Privacy §3a and neither of them your data: a read-log
 line for each control-plane read or `events-tail` poll — your account id, the tenant,
-which read, the time; deleted after 90 days — and, for each routing change made in
-the browser panel, one append-only audit row in our engine store.
+which read, the time; deleted after 90 days — and, for each routing change, whether it
+was made in the browser panel or with a v1.10.0 change command, one append-only audit
+row in our engine store.
 
 **Can it change my books?** No. The binaries contain no code paths that write to
 the connected systems — read-only is a structural property of the shipped client,

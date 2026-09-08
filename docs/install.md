@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.9.0 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.10.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.9.0_linux_amd64.deb
-    sudo rpm -i  terakota_v1.9.0_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.10.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.10.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -56,10 +56,10 @@ the release yourself — see **[verify.md](verify.md)**.
 
 Upgrade through the channel you installed with:
 
-    brew upgrade terakota                           # Homebrew
-    curl -fsSL https://terakota.io/install.sh | sh  # install script — re-run it
-    sudo dpkg -i terakota_v1.9.0_linux_amd64.deb    # .deb — installs over the old
-    sudo rpm -U  terakota_v1.9.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+    brew upgrade terakota                            # Homebrew
+    curl -fsSL https://terakota.io/install.sh | sh   # install script — re-run it
+    sudo dpkg -i terakota_v1.10.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.10.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
 
 For the MCP extension, download the new `.mcpb` for your platform and install it
 from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
@@ -73,19 +73,33 @@ binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
 step attached: see the keystore note under
 [Where your credentials live](#where-your-credentials-live).
 
-**v1.9.0 does not reprint the first-run notice.** It reprints only when the terms
-version it pins changes, and v1.9.0 stays on terms 1.3, the version v1.8.0 already
-pinned. Coming from a release older than v1.8.0 you see it once, because v1.8.0 is
-where the pinned terms moved to 1.3
+**v1.10.0 does not reprint the first-run notice.** It reprints only when the terms
+version it pins changes, and v1.10.0 stays on terms 1.3, the version v1.8.0 already
+pinned. Two of the notice's sentences are reworded, so a fresh install reads the current
+text and an upgrade does not print it again. Coming from a release older than v1.8.0 you
+see it once, because v1.8.0 is where the pinned terms moved to 1.3
 ([what changed](https://github.com/Terakota-io/terakota/issues/20)).
 `terakota about` shows the notice any time.
 
-**v1.9.0's `verify-receipts` understands the control-plane change pair.** That is the
-whole release: no new command and no new MCP tool; the one thing that behaves
-differently is `verify-receipts`, which now grades that pair.
-The reason to take it is that a verifier older than v1.9.0 fails a chain carrying that
-pair outright, so you want the new one in hand before such a chain reaches you. See
-[verify.md](verify.md).
+**v1.10.0 adds the four change commands.** `platform-subscribe`,
+`platform-unsubscribe`, `platform-replay` and `platform-catchall-replay` change the
+delivery routing of the hosted tenant a company is linked to. They need two things the
+`platform-*` reads do not: a company you have linked with `terakota link`, and an
+interactive terminal. No flag, environment variable or automation path stands in for the
+terminal, and each command prints the act it is about to perform and proceeds only when
+you type the tenant slug back. Nothing else changes for an upgrader: the reads,
+`verify-receipts` and every local command behave as they did.
+
+Two things to know before you run one. A change succeeds only against a hosted control
+plane already updated for this release; until it is, the command answers a typed refusal
+naming the class and the next action that clears it. And a refusal is not always a local
+no-op: once the terminal and the typed slug are past, the command writes a
+`control_intent` on that company's chain before it dials and a `control_act` once the
+attempt ends, whether a readable answer came back or not, so a refusal and an unreadable
+answer both leave the pair behind. The chain is the only local state a change touches;
+no other local state changes either way. The verifier that grades the pair
+shipped in v1.9.0, so keep `verify-receipts` on v1.9.0 or later; an older one fails a
+chain carrying the pair outright. See [verify.md](verify.md).
 
 **The tool registry moved in v1.7.0**, so receipts minted by v1.7.0 carry a new
 `registry_version`. Nothing breaks: `verify-receipts` grades the chain, not the
@@ -180,9 +194,9 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.9.0_linux_amd64.tar.gz`,
-  `terakota_v1.9.0_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.9.0_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.10.0_linux_amd64.tar.gz`,
+  `terakota_v1.10.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.10.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
@@ -212,7 +226,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.9.0_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.10.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and
