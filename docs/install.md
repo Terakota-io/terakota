@@ -81,7 +81,8 @@ where the pinned terms moved to 1.3
 `terakota about` shows the notice any time.
 
 **v1.9.0's `verify-receipts` understands the control-plane change pair.** That is the
-whole release: no new command, no new MCP tool, and nothing your binary does changes.
+whole release: no new command and no new MCP tool; the one thing that behaves
+differently is `verify-receipts`, which now grades that pair.
 The reason to take it is that a verifier older than v1.9.0 fails a chain carrying that
 pair outright, so you want the new one in hand before such a chain reaches you. See
 [verify.md](verify.md).

@@ -157,7 +157,9 @@ hosted Terakota tenant's control plane is two records sharing one `dedup_key`: a
 carries the audit row's own before and after digests, and the verifier re-checks that
 they follow the effect the act claims rather than taking them on trust. `refused` means
 a typed answer came back declining the change, named by an `outcome_class` from a
-closed set. `error` means no answer arrived at all, the one class it may carry being
+closed set. `error` means no answer arrived at all: the act is still appended, once the
+attempt ends without an envelope (a dial failure, a timeout, a body that is not an
+envelope), always after its intent, and the one class it may carry is
 `control_plane_unavailable`, so it records that the outcome was never observed, not
 that nothing happened. The intent has to come first: an act with no intent on the
 chain, or one ordered before its intent, is a real failure, because the same process
@@ -171,6 +173,16 @@ verifier does not know, a control record carrying one fails and names it, becaus
 additive member here needs a verifier release before anything may write it. And the
 inputs it records are a closed tuple per verb, which is how "never an endpoint, never
 a secret reference, never a payload" is checked by shape instead of by reading content.
+
+The v1.9.0 shape, for the record. Both records carry `type`, `canon_v`, `tenant`,
+`company_key`, `correlation_id`, `invocation_id`, `version_tuple`, `input_hash`,
+`dedup_key` and `outcome`, plus the family's `verb`, `hosted_tenant`, `api_origin`,
+`transport`, `inputs` and `principal`. The intent may add `caller_stated_intent`. The
+act adds `outcome_class` when the outcome is not `ok`, and `effect`, `audit_seq`,
+`before_digest` and `after_digest` when it is, with `counts` on a catch-all sweep.
+`inputs` is `{source, topic, binding, destination}` for a subscribe, `{source, topic,
+destination}` for an unsubscribe, `{quarantine_id}` for a replay and `{}` for a
+catch-all replay. Any other member, in either record, fails the chain and is named.
 
 **Upgrade your verifier before you meet one.** An unknown receipt type fails the whole
 chain, deliberately: a verifier that quietly skipped a record it could not read would
