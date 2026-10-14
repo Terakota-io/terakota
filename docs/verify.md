@@ -249,7 +249,7 @@ And the `read_result` carries `source_request_id: afm:<12 hex>:<seconds>`: the f
 hex digits of a SHA-256 over the binding's `user@host:port/dbname`, which identifies the
 mirror without printing its address, then the collection's `last_event_applied_at` in Unix
 seconds, `0` when it was not proven. That id is a support handle outside the fingerprint.
-Neither member is hashed into `input_hash`, and the query identity that is holds no
+Neither member is hashed into `input_hash`, and the query identity that is hashed holds no
 transport, so the same query gets the same `read_intent` hash over the API and over the
 mirror. The verifier grades these pairs exactly as it grades API reads, so an older
 `verify-receipts` grades them too.
