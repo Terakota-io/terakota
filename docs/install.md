@@ -21,15 +21,15 @@ Two settings, and they go on the **`sh`** side of the pipe — putting them befo
 `curl` sets them for `curl` instead, which does nothing:
 
     # pin a release instead of taking the latest
-    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.10.0 sh
+    curl -fsSL https://terakota.io/install.sh | TERAKOTA_VERSION=v1.11.0 sh
 
     # install system-wide (needs write access to /usr/local)
     curl -fsSL https://terakota.io/install.sh | sudo PREFIX=/usr/local sh
 
 **Linux packages (`.deb` / `.rpm`, since v1.1.0)**
 
-    sudo dpkg -i terakota_v1.10.0_linux_amd64.deb
-    sudo rpm -i  terakota_v1.10.0_linux_amd64.rpm
+    sudo dpkg -i terakota_v1.11.0_linux_amd64.deb
+    sudo rpm -i  terakota_v1.11.0_linux_amd64.rpm
 
 Download the package for your CPU from the [Releases page](../../releases).
 Both binaries install to `/usr/bin`, and `EULA.md` + `THIRD_PARTY_NOTICES` to
@@ -58,8 +58,8 @@ Upgrade through the channel you installed with:
 
     brew upgrade terakota                            # Homebrew
     curl -fsSL https://terakota.io/install.sh | sh   # install script — re-run it
-    sudo dpkg -i terakota_v1.10.0_linux_amd64.deb    # .deb — installs over the old
-    sudo rpm -U  terakota_v1.10.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
+    sudo dpkg -i terakota_v1.11.0_linux_amd64.deb    # .deb — installs over the old
+    sudo rpm -U  terakota_v1.11.0_linux_amd64.rpm    # .rpm — -U, not -i, to upgrade
 
 For the MCP extension, download the new `.mcpb` for your platform and install it
 from Claude Desktop → **Settings** → **Extensions** again; it replaces the old
@@ -73,33 +73,62 @@ binaries and nothing else. Coming from v1.0.0 or v1.1.0 is the one case with a
 step attached: see the keystore note under
 [Where your credentials live](#where-your-credentials-live).
 
-**v1.10.0 does not reprint the first-run notice.** It reprints only when the terms
-version it pins changes, and v1.10.0 stays on terms 1.3, the version v1.8.0 already
-pinned. Two of the notice's sentences are reworded, so a fresh install reads the current
-text and an upgrade does not print it again. Coming from a release older than v1.8.0 you
-see it once, because v1.8.0 is where the pinned terms moved to 1.3
+**v1.11.0 does not reprint the first-run notice.** It reprints only when the terms
+version it pins changes, and v1.11.0 stays on terms 1.3, the version v1.8.0 already
+pinned. Coming from a release older than v1.8.0 you see it once, because v1.8.0 is where
+the pinned terms moved to 1.3
 ([what changed](https://github.com/Terakota-io/terakota/issues/20)).
 `terakota about` shows the notice any time.
 
-**v1.10.0 adds the four change commands.** `platform-subscribe`,
-`platform-unsubscribe`, `platform-replay` and `platform-catchall-replay` change the
-delivery routing of the hosted tenant a company is linked to. They need two things the
-`platform-*` reads do not: a company you have linked with `terakota link`, and an
-interactive terminal. No flag, environment variable or automation path stands in for the
-terminal, and each command prints the act it is about to perform and proceeds only when
-you type the tenant slug back. Nothing else changes for an upgrader: the reads,
-`verify-receipts` and every local command behave as they did.
+**v1.11.0 lets AppFolio reads ride a database mirror.** A company can bind a read-only
+Postgres mirror of its AppFolio data and read that instead of the AppFolio API. It is
+opt-in per company and the API stays the default, so a company that never binds a mirror
+reads exactly as before. To try it, run
+`terakota credentials set --company <id> --transport mirror --mirror-env dev|production`;
+`terakota company transport --company <id> --set api` goes back, and the API credentials
+stay stored throughout. What the mirror is and how to read its answers: [faq.md](faq.md).
+What else the upgrade changes:
 
-Two things to know before you run one. A change succeeds only against a hosted control
-plane already updated for this release; until it is, the command answers a typed refusal
-naming the class and the next action that clears it. And a refusal is not always a local
-no-op: once the terminal and the typed slug are past, the command writes a
-`control_intent` on that company's chain before it dials and a `control_act` once the
-attempt ends, whether a readable answer came back or not, so a refusal and an unreadable
-answer both leave the pair behind. The chain is the only local state a change touches;
-no other local state changes either way. The verifier that grades the pair
-shipped in v1.9.0, so keep `verify-receipts` on v1.9.0 or later; an older one fails a
-chain carrying the pair outright. See [verify.md](verify.md).
+- **The tool registry moved again.** `bills` gained `Reference`, `leases` gained
+  `SignedOn`, and `recurring_charges.Amount`, `tenants.CurrentRent` and
+  `vendors.WorkOrderAdjustment` are now declared decimal strings rather than numbers,
+  which is what the API sends. Only the declarations changed (the field lists `--help` and
+  the MCP tool descriptions print); API answers are the same. `registry_version` moves
+  with them, from `31e9e888…` to `5e53bb7f…`, and receipts minted by v1.11.0 carry the new
+  value. The verifier compares no registry value, so a chain holding both still verifies.
+- **Mirror reads carry their own adapter version.** A read over a mirror records
+  `adapter_version: appfolio-mirror-2026-10-14` on its receipt pair; an API read keeps the
+  API adapter's value. The transport is not part of `input_hash`: the same query gets the
+  same `read_intent` hash on both.
+- **The local links store gains a column.** `links-<id>.db` moves from schema 3 to 4. The
+  first `reconcile`, `links-list`, `links-confirm`, `links-revoke` or MCP session to open
+  a company's store migrates it, in one transaction. The new column records which
+  AppFolio transport a reconcile run started over; rows written before the upgrade have
+  none and resume as they did. A build older than v1.11.0 refuses the migrated file, so
+  keep a copy of `links-<id>.db` from before the upgrade if you may need to go back.
+- **Early mirror cursors do not resume.** An `afm1.` cursor is bound to its collection,
+  its query and its company. One minted by a pre-release build, before the company was
+  bound into it, is refused: list again without the cursor. API `afc1.` cursors are
+  unchanged, and neither kind continues across a `company transport --set` switch.
+- **`credentials set` takes flags only.** A positional argument is now refused with exit
+  `2` before any prompt, where v1.10.0 ignored it. An argument carrying a `postgresql://`
+  URL, or a URL with a user name or password in it (a `--base-url` included), is refused
+  the same way by `credentials set` and `company transport`.
+- **`verify-receipts` is stricter on reconcile records.** An input class or auth verdict
+  outside its closed list now fails the chain. Every value an earlier release wrote is on
+  those lists, so existing chains still verify. See [verify.md](verify.md).
+
+**The four change commands arrived in v1.10.0.** `platform-subscribe`,
+`platform-unsubscribe`, `platform-replay` and `platform-catchall-replay` change the
+delivery routing of the hosted tenant a company is linked to. They need a company you
+have linked with `terakota link` and an interactive terminal; no flag, environment
+variable or automation path stands in for the terminal, and each command prints the act
+and proceeds only when you type the tenant slug back. Past that point each one writes a
+`control_intent` on the company's chain before it dials and a `control_act` once the
+attempt ends, so a refusal leaves the pair behind too; the chain is the only local state a
+change touches. The verifier that grades the pair shipped in v1.9.0, so keep
+`verify-receipts` on v1.9.0 or later; an older one fails a chain carrying the pair
+outright. See [faq.md](faq.md) and [verify.md](verify.md).
 
 **The tool registry moved in v1.7.0**, so receipts minted by v1.7.0 carry a new
 `registry_version`. Nothing breaks: `verify-receipts` grades the chain, not the
@@ -194,9 +223,9 @@ Every release carries archives for Linux, macOS, and Windows on both `amd64` and
 Archive names follow `terakota_<tag>_<os>_<arch>` — `<tag>` is the release tag
 verbatim, including the leading `v`:
 
-- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.10.0_linux_amd64.tar.gz`,
-  `terakota_v1.10.0_darwin_arm64.tar.gz`)
-- Windows: `.zip` (e.g. `terakota_v1.10.0_windows_amd64.zip`)
+- Linux / macOS: `.tar.gz` (e.g. `terakota_v1.11.0_linux_amd64.tar.gz`,
+  `terakota_v1.11.0_darwin_arm64.tar.gz`)
+- Windows: `.zip` (e.g. `terakota_v1.11.0_windows_amd64.zip`)
 
 > **Two ways to connect QuickBooks (from v1.4.0).** A **production** company
 > connects through our hosted connect service and needs a free terakota account.
@@ -226,7 +255,7 @@ them — see **[verify.md](verify.md)** for the exact commands.
 Linux / macOS — substitute the archive you downloaded (`darwin_arm64` on Apple
 Silicon, `darwin_amd64` on Intel Macs, `linux_amd64`/`linux_arm64` on Linux):
 
-    tar -xzf terakota_v1.10.0_darwin_arm64.tar.gz
+    tar -xzf terakota_v1.11.0_darwin_arm64.tar.gz
     install -m 0755 terakota verify-receipts /usr/local/bin/   # or any dir on your PATH
 
 Windows (PowerShell): extract the `.zip` and move `terakota.exe` and

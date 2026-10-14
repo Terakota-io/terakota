@@ -121,6 +121,202 @@ never do, so a change is the one linked verb that will not run beside a live
 passphrase was never asked for. Close the other process, or point the change at a
 different `--home`, and re-run.
 
+**What is the mirror transport?** From v1.11.0, a company's AppFolio tools can read a
+Postgres mirror of its AppFolio data instead of the AppFolio API. It is for a company that
+already has its AppFolio data copied, by a separate sync engine, into a Postgres database
+it controls. terakota reads that database from your machine with a read-only role; no
+service of ours sits in the path. The transport is chosen per company and the API stays the
+default, so a company that never binds a mirror reads exactly as before. The same 17
+collections answer through the same `appfolio_*_get` and `appfolio_*_list` tools, with the
+API's page sizes; no tool was added or removed. Read-only still holds: the session is
+read-only, each read runs in one read-only, repeatable-read transaction (so a page and its
+child rows come from one snapshot), and the bind refuses a role that can write the tables
+it reads.
+
+**How do I bind a mirror?**
+
+    terakota credentials set --company mybooks --transport mirror --mirror-env production
+
+`--mirror-env` is required and says what the database holds: `dev` or `production`. The
+database URL is never an argument. The command asks for it at a no-echo `Database URL`
+prompt, or reads it with `--url-fd <n>` from an open file descriptor, which is the way in
+without a terminal; the descriptor is read to its end and must carry the URL alone on one
+line. The URL accepts three options, `sslmode` (`require` or `verify-full`), `sslrootcert`
+(an absolute path, with `verify-full` only) and `connect_timeout`, and refuses any other.
+Port 6543, a transaction-mode pooler, is refused: use a session-mode port.
+
+Before it stores anything, the bind connects read-only and checks the database, reporting
+every failure at once:
+
+- the role is not a superuser, owns none of the tables terakota reads, and cannot write
+  them;
+- every table and column terakota reads exists;
+- no table carries a tenant-key column, because one mirror must hold exactly one AppFolio
+  database.
+
+If the company also has AppFolio API credentials, the bind then looks the mirror's newest
+property up over the API: found prints `same_database: proven`, while a miss, an empty
+mirror or an API it cannot read refuses the bind. Without API credentials it prints
+`same_database: unproven`.
+
+**What does the bind print, and what is stored where?** On success, one line:
+
+    stored mirror binding for company "mybooks": <user>@<host>:<port>/<dbname> [production]; AppFolio reads now use the mirror
+
+with ` tls: unverified` after the environment unless the URL set `sslmode=verify-full`.
+The identity names the user, host, port and database, never the password. Then come the
+sync engine's own state labels and names, so you can check by eye where freshness is read
+from, and `same_database`. A role wider than terakota needs adds a line on stderr. A
+failure never prints the URL or the password.
+
+Only the password is sealed: in your keystore (the OS keychain by default) under
+`appfolio-mirror/<id>`, beside the company's other entries, so `keystore migrate` moves it
+with them. The rest of the binding holds no secret and goes in the company's entry in
+`profiles.json`: user, host, port, database and schema, the environment and connection
+settings, and what the bind found (role scope, `same_database`, the ledger-detail floor and
+when the binding was pinned).
+
+Running the bind again with the same user, host, port, database, schema and environment
+rotates the password. Anything else, or weaker TLS (dropping `verify-full`, or another root
+certificate), is refused unless you pass `--replace`, which prints the old and the new
+identity and how many reconcile runs the company has recorded. A `--replace` needs the
+company's chain free, so close a running MCP server first. It does not end a list walk in
+progress either: after a rebind, list again without the cursor.
+
+**How do I switch back, or check a binding?**
+
+    terakota company transport --company mybooks               # prints api or mirror
+    terakota company transport --company mybooks --set api     # back to the AppFolio API
+    terakota company transport --company mybooks --set mirror  # back to the mirror
+    terakota company transport --company mybooks --check       # re-run the mirror handshake
+
+`--set` switches only to a transport that already holds stored credentials, asks for no
+passphrase, and leaves the other transport's credentials stored. A running MCP server keeps
+the transport and binding it opened with until it restarts. A plain `credentials set` on a
+mirror-bound company stores the API pair, leaves the transport on `mirror`, and says so.
+
+`--check` re-runs the handshake on the bound mirror and prints the identity line, the
+engine's labels, `tables N/M`, `gl_details from <date>`, `role_scope: narrow|wide`,
+`same_database` and `tls: verified|unverified`, then one line per collection: when its
+events were last applied and received, how many are pending, and its notes. It refuses a
+company on the API transport, and exits `1` when a production binding's role has become
+wide. `--set` and `--check` together are refused.
+
+**What does `coverage.mirror` tell me?** Every AppFolio answer for a mirror-bound company
+carries it, errors included once the read has started; an API answer never does.
+
+- `last_event_applied_at`: when the collection's newest change was applied to the mirror.
+  Charges take it from the engine's last charges job (or the table's newest update),
+  gl_details from the engine's ledger sync cursor, and work orders from the table's newest
+  update when the queue has none.
+- `last_event_received_at`: the newest event the sync engine received, one value for every
+  collection.
+- `pending_events` and `failed_events`: the collection's changes still queued, and those
+  that failed to apply. Always present, zero included.
+- `fields_absent` and `fields_lossy`: the tool's declared fields the mirror cannot carry,
+  or carries with a loss.
+- `notes`: tokens from a closed list of eleven.
+  - About the collection: `deletes-not-mirrored` (every collection), `charges-manual-job`
+    (charges refresh only when the engine's charges job is run by hand),
+    `sync-time-timestamp` (gl_details and rental applications carry the engine's sync time,
+    not AppFolio's), `memberships-incomplete` (property group memberships) and
+    `hidden-by-is-active` (owners: hidden is judged by an active flag).
+  - About freshness: `liveness-unproven`, below.
+  - About the read: `below-mirror-floor`, `absent-in-mirror`, `deleted-flag-unverified`.
+  - About the binding: `tls-unverified`, `role-scope-wide`.
+
+A time that cannot be proven is left out, never guessed.
+
+**What do the mirror's `next_action` hints mean?** Four of them are about the mirror
+itself, and none rides an error:
+
+- **Stale:** the collection's freshness is not proven current, so its records may lag
+  AppFolio. For charges, gl_details and work orders that means the applied time is missing
+  or over an hour old; for the rest, the sync engine has received no event at all for
+  over an hour, or `liveness-unproven` rides.
+- **Silent** (`liveness-unproven`): the sync engine has no heartbeat, so a quiet queue looks
+  the same as a stopped one. The note rides when a collection has no applied time, has
+  received no event of its type in 24 hours, or its freshness could not be read. Outside
+  charges, gl_details and work orders it brings the stale hint with it.
+- **Failed events:** the hint gives the count of the collection's changes that failed to
+  apply, and says to confirm over the API before acting on its records.
+- **Found record:** a `_get` that finds the record says it was present as of
+  `last_event_applied_at`, that deletions are not mirrored, and to confirm over the API
+  before acting on its existence.
+
+The way to the API is `terakota company transport --company <id> --set api`. It takes
+effect on the next process start: the next CLI command, or the MCP server's restart.
+
+**Why are counts over the mirror exact, and what does "as of" mean?** Over the mirror an
+`--aggregate` runs as one SQL statement inside one snapshot: no page walk, no cursor, no
+carried subtotal to stitch together. The aggregate block says `exact: true` when the
+collection's applied time is known and the group cap did not cut the answer, and `as_of`
+names that time, the collection's `last_event_applied_at`. Exact means exact over the rows
+the mirror held, not over AppFolio now: a change the mirror has not applied yet (see
+`pending_events` and `failed_events`) is not in the count. The API's 1,000-group cap still
+holds: past it, the answer is the first 1,000 groups in key order, `partial` and without
+`exact`, and `next_action` says to group by a coarser field or narrow the read. gl_details
+debit and credit totals come from their own statement over the whole window, so they stay
+exact under the cap.
+
+**What does the mirror not carry?** Three things, each disclosed on the answer:
+
+- **Deletions.** A record deleted in AppFolio stays in the mirror until the sync engine
+  removes or flags it, and today the engine does not mirror deletions: the note
+  `deletes-not-mirrored` rides every collection. Lists and aggregates leave flagged rows
+  out. `_get` never answers `gone` over the mirror: a miss is a `gap`, noted
+  `absent-in-mirror`, or `deleted-flag-unverified` when the mirror flags the row deleted.
+- **Some fields.** `fields_absent` names declared fields the mirror has no column for, and
+  `fields_lossy` the ones it carries with a loss, such as a date without its time or an
+  enum value the engine could not store.
+- **Ledger detail before the floor.** The mirror holds gl_details from its earliest
+  posting date on, which `--check` prints as `gl_details from <date>`. A window wholly
+  below that floor, or a mirror with no ledger detail, answers `error` with class
+  `source_rejected` and a detail naming the floor, or saying there is none. A window that
+  crosses it is answered from the floor up as `partial`: `coverage.suggested_window` names
+  the part below, and `next_action` says to read it over the API. Over the mirror,
+  gl_details also refuses `--updated-on-from` / `--updated-on-to` and
+  `--group-by Postings`.
+
+**Why is a CLI call over the mirror slower than an MCP call?** A process opens the mirror
+once: connect, TLS, sign-in, then the handshake that checks the role and the tables. Each
+`terakota` command is its own process, so each one pays that before its read: about three
+seconds per command in our measurements against a remote pooler. `--check` also reads
+freshness for all 17 collections and takes longer. The MCP server opens the mirror on its
+first AppFolio read and keeps it for the session, so it pays once. Every answer still
+reads its collection's freshness.
+
+**What does a production binding need?** `--mirror-env production` requires
+`sslmode=verify-full` with `sslrootcert`, the absolute path of the root certificate the
+server is checked against, and a narrow read-only role: one that reads the `appfolio`
+schema only. A role that can also read the sync engine's other schemas is refused at bind
+time, by `--check` (exit `1`) and at read time. A `dev` binding accepts `sslmode=require`
+and a wider read-only role, and says so: the notes `tls-unverified` and `role-scope-wide`
+ride every answer, `tls: unverified` follows the environment on its identity line, and a
+wide role adds a line on stderr.
+
+**What does a reconcile over the mirror record?** For a mirror-bound company,
+`terakota reconcile` and the MCP `reconcile_start` read the AppFolio side over the mirror;
+QuickBooks is read over its API as before. A binding that cannot open refuses the run; it
+never falls back to the API. Each AppFolio leg is an ordinary receipted read carrying the
+mirror's `adapter_version` and an `afm:` request id. The reconciliation receipt names the
+input on its manifest: the AppFolio line carries `source_class: db_mirror` and
+`auth_verdict: db_role_readonly`, and the QuickBooks line stays `api_sweep` and
+`transport_auth`. Harvest tiles below the mirror's ledger-detail floor are not read, and a
+tile that crosses it is read from the floor up; what lies below is recorded unswept under
+the cause `source_floor`, the run is `partial`, and `next_action` counts those windows and
+says to reconcile those dates over the API. The run
+envelope carries one `coverage.mirror` for the collections the run read; from an MCP
+session, `reconcile_status` carries it only from the server process that ran the run.
+
+A run cannot switch transport halfway. The local run row records the transport the run
+started over, and resuming it over the other one refuses before either source is read:
+`run <id> started over the api transport and cannot resume over the mirror; start a new run`
+(or the reverse). The row settles `failed` with `environment_moved`, and the next
+reconcile of that window starts a new run. Rows written before v1.11.0 record no transport
+and resume as they did. [verify.md](verify.md) covers what the verifier checks on these
+records.
+
 **Why did `registry_version` change?** Because v1.7.0 added the three composite tool rows
 to the static manifest and closed each row's receipt-contract declaration into an enum,
 and `registry_version` is a hash over the whole table — so it rehashes as a whole:
@@ -135,6 +331,17 @@ them: pass `--company` — required on every invocation, cursor or not — and t
 non-default `--home`, and pass no filter flag alongside `--cursor`. Only `--intent` may
 ride with it.
 
+It moved again in v1.11.0, from
+`31e9e888e01f2e8ff4fc4d460710dd6c12fa72c0b906465f45dc669cb504ed26` (v1.8.0 to v1.10.0) to
+`5e53bb7facb0031db77174221360acc168e1e96d718e7418394ac1d9055753dd`. Five declarations
+changed, on the `_get` and `_list` rows of five collections, and nothing else: `bills`
+gained `Reference`, `leases` gained `SignedOn`, and `recurring_charges.Amount`,
+`tenants.CurrentRent` and `vendors.WorkOrderAdjustment` are now declared decimal strings
+rather than numbers, which is what the API sends. These are the field lists `--help` and
+the MCP tool descriptions print; API answers are unchanged and no tool was added or
+removed. The same rule holds: the verifier compares no registry value, so a chain holding
+receipts from both sides of the move still verifies.
+
 **Does terakota phone home?** No telemetry, no analytics, no crash reporting —
 none, not even optional ones, in any version. It calls a service of ours in two
 cases only. The first is a production QuickBooks connection made through our
@@ -147,7 +354,8 @@ you link a company with `terakota link` the `platform-*` read commands and
 commands post to it. Every one of those calls is started by you. With no
 production QuickBooks connection and no `terakota login` it contacts no host of
 ours at all, and its network connections are to the systems you point it at
-(AppFolio, Intuit, Dialpad), using your credentials.
+(AppFolio or a database mirror of it you bound, Intuit, Dialpad), using your
+credentials.
 
 **Does a change command send anything else?** No, and the traffic is short. The change
 itself is one POST to the control plane carrying three things: the bearer `terakota login`
@@ -175,9 +383,10 @@ and the set of hosts the binary can dial at all is the one described under **Doe
 phone home?** above; a change adds no host to it.
 
 **What data can you (the makers) see?** None of your business data, in any mode.
-Your AppFolio and Dialpad credentials, your queries, your results, and your receipt
-chains stay on your machine — we hold no copy and no interface of ours can reach
-them. Reads run from your machine to the vendor directly, always.
+Your AppFolio and Dialpad credentials (a mirror binding's password included), your
+queries, your results, and your receipt chains stay on your machine — we hold no copy
+and no interface of ours can reach them. Reads run from your machine to the vendor, or
+to the database mirror you bound, directly, always.
 
 If you connect a **production** QuickBooks company through our connect service
 (from v1.4.0), we hold two things: your free terakota account, and an eleven-field
@@ -185,10 +394,10 @@ connection record — ids, a keyed hash of the realm, status, scope, timestamps,
 a revocation reason; metadata only, never your QuickBooks data, and no raw realm id
 or company name. QuickBooks token material transits the broker during authorization
 and renewal and comes back sealed to your machine; nothing we could read is at rest
-on our side. AppFolio, Dialpad, local reconciliation, `verify-receipts`, and
-sandbox QuickBooks under your own registered Intuit application need no account and
-put no service of ours in the path. The full field list is in
-[PRIVACY.md](legal/PRIVACY.md) §3a.
+on our side. AppFolio (over its API or a database mirror), Dialpad, local
+reconciliation, `verify-receipts`, and sandbox QuickBooks under your own registered
+Intuit application need no account and put no service of ours in the path. The full
+field list is in [PRIVACY.md](legal/PRIVACY.md) §3a.
 
 If you sign in with `terakota login` and link a company (from v1.8.0), we hold two
 more things, both described in Privacy §3a and neither of them your data: a read-log
