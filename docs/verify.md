@@ -207,6 +207,53 @@ act. An intent left without one therefore means the process died between the two
 appends, or the append itself failed, which is exactly why the verifier reads it as an
 outcome never observed rather than as nothing having happened.
 
+**From v1.11.0, two members of the reconciliation record are closed lists.** Each line of
+a reconciliation's inputs manifest says how its material reached the run (`source_class`)
+and what its authentication established (`auth_verdict`). The verifier now holds both to
+closed lists:
+
+- input classes: `api_sweep`, `db_mirror`, `file-csv`, `file_ingest`;
+- auth verdicts: `bytes_hashed`, `db_role_readonly`, `hash_verified`, `origin_verified`,
+  `refused`, `transport_auth`.
+
+A value outside its list, or none at all, fails the chain with exit `1`, and the problem
+names the value. Every value Terakota wrote before v1.11.0 is on those lists, so older
+chains still verify. A `verify-receipts` older than v1.11.0 never reads these two members:
+it passes a chain carrying the new values without checking them, so the check needs
+v1.11.0 or later.
+
+**What `db_mirror` and `db_role_readonly` attest.** A reconcile run over a database mirror,
+new in v1.11.0, records both on its AppFolio line. The QuickBooks line stays `api_sweep`
+and `transport_auth`, and a run over the AppFolio API records what it always did.
+`db_mirror` says the AppFolio side was read over SQL from a Postgres mirror rather than
+from the API. `db_role_readonly` names the check behind that read: the handshake that
+opened the mirror found the role is not a superuser, owns none of the tables it reads and
+cannot write them, checked inside a read-only transaction. It does not say the mirror was
+current: how far it lagged AppFolio rides the run's own output (`coverage.mirror`), never
+the chain. And as for every member, the verifier checks that the value is on its list, not
+that the handshake ran.
+
+**`source_floor`, a new cause of a partial run.** A mirror holds ledger detail from some
+first posting date on, its floor. A reconcile harvest tile below the floor is not read and
+is recorded unswept under the cause `source_floor`; a tile that crosses it is read from the
+floor up and leaves its lower part unswept. Either way the AppFolio line stands `partial`,
+so the verifier holds the record to a partial outcome, as it does for a budget cut. The
+cause itself is named only in the run's own output (`partial_reason` and
+`unswept_windows`): the chained record says that a side stood short, never why, so the
+pack and the verifier show `partial` without the cause.
+
+**Reads over a database mirror look like any other read.** Each one chains the usual
+`read_intent` and `read_result` pair, and two members tell it apart. The `version_tuple`
+names `adapter_version: appfolio-mirror-2026-10-14` instead of the API adapter's value.
+And the `read_result` carries `source_request_id: afm:<12 hex>:<seconds>`: the first 12
+hex digits of a SHA-256 over the binding's `user@host:port/dbname`, which identifies the
+mirror without printing its address, then the collection's `last_event_applied_at` in Unix
+seconds, `0` when it was not proven. That id is a support handle outside the fingerprint.
+Neither member is hashed into `input_hash`, and the query identity that is hashed holds no
+transport, so the same query gets the same `read_intent` hash over the API and over the
+mirror. The verifier grades these pairs exactly as it grades API reads, so an older
+`verify-receipts` grades them too.
+
 **What a pass establishes.** The evidence class is **artifact integrity**. The
 records are hash-linked, so a partial change — one edited row, a truncated file, a
 corrupted byte — breaks the linkage and surfaces in every check above. A wholesale
@@ -218,9 +265,10 @@ a pack produced later with a different head is a different pack. The pack's own
 tools; read it before you rely on the pack. For a reconcile verdict in the pack, a pass
 establishes less than the verdict's own wording might suggest: that the record is intact
 and self-consistent — its inputs manifest still hashes to its `input_hash`, its window
-and its coverage claim agree with that manifest, and its lineage fields are well-formed
-and correctly ordered against the records around them. The verifier does not re-read the
-sources, re-run the matcher, or recompute `link_set_hash` from the link records on the
-chain, and it does not tie the inputs manifest to the `read_result` rows beside it. So a
-pass says the verdict has not been altered since it was chained — not that it was in fact
-derived from those reads, and not that the books are right.
+and its coverage claim agree with that manifest, its lineage fields are well-formed
+and correctly ordered against the records around them, and, from v1.11.0, every input
+line names a class and an auth verdict from the closed lists above. The verifier does
+not re-read the sources, re-run the matcher, or recompute `link_set_hash` from the link
+records on the chain, and it does not tie the inputs manifest to the `read_result` rows
+beside it. So a pass says the verdict has not been altered since it was chained — not
+that it was in fact derived from those reads, and not that the books are right.
